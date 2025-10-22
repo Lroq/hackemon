@@ -1,33 +1,43 @@
-// routes.js
+/**
+ * Routes principales de l'application
+ */
 const express = require('express');
 const path = require('path');
-const User = require('./models/User');
+
+// Controllers
+const AuthController = require('./controllers/AuthController');
+
+// Middleware
+const { requireAuth, logAuthAttempt } = require('./middleware/auth');
+const { validateRegisterData, validateLoginData, sanitizeInput } = require('./middleware/validation');
 
 const router = express.Router();
 
-const registerRouter = require('./js/register');
-router.use('/register', registerRouter);
+// Middleware global pour les routes d'authentification
+router.use(['/login', '/register'], sanitizeInput);
+router.use(['/login', '/register'], logAuthAttempt);
 
-const loginRouter = require('./js/login');
-router.use('/login', loginRouter);
+// Routes d'authentification
+router.post('/login', validateLoginData, AuthController.login);
+router.post('/register', validateRegisterData, AuthController.register);
+router.post('/logout', AuthController.logout);
 
-router.get("/profile", (req, res) => {
-    if (!req.session.userId) {
-        return res.status(401).json({ error: "Veuillez vous connecter." });
-    }
+// Routes protégées
+router.get('/profile', requireAuth, AuthController.getProfile);
+router.get('/session', AuthController.checkSession);
 
-    User.findById(req.session.userId, (err, user) => {
-        if (err) {
-            console.error("Erreur lors de la récupération de l'utilisateur:", err.message);
-            return res.status(500).json({ error: "Erreur serveur." });
-        }
-
-        res.json(user);
-    });
-});
-
+// Route principale
 router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/templates/index.html'));
+});
+
+// Route de santé pour vérifier le serveur
+router.get('/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    });
 });
 
 module.exports = router;

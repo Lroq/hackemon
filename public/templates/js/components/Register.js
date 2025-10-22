@@ -1,0 +1,195 @@
+/**
+ * Composant pour la fenêtre d'inscription
+ */
+class Register extends Window {
+    constructor() {
+        super(20, 20, true, "S'inscrire");
+        this.onLoginSuccess = null; // Callback pour redirection après inscription
+        this.initializeRegister();
+    }
+
+    /**
+     * Initialise le formulaire d'inscription
+     * @private
+     */
+    initializeRegister() {
+        const form = this.createRegisterForm();
+        this.append(form);
+    }
+
+    /**
+     * Crée le formulaire d'inscription
+     * @private
+     * @returns {HTMLElement} Le formulaire
+     */
+    createRegisterForm() {
+        const form = HTMLBuilder.build("form", {
+            style: "display:flex; width: 100%; height: 100%; overflow: hidden; flex-direction: column; justify-content: center"
+        });
+
+        // Champs du formulaire
+        const emailInput = HTMLBuilder.build("input", {
+            type: "email",
+            placeholder: "Email",
+            required: true
+        });
+
+        const usernameInput = HTMLBuilder.build("input", {
+            type: "text",
+            placeholder: "Nom d'utilisateur",
+            required: true
+        });
+
+        const passwordInput = HTMLBuilder.build("input", {
+            type: "password",
+            placeholder: "Mot de passe",
+            required: true,
+            minLength: 6
+        });
+
+        const submitButton = HTMLBuilder.build("input", {
+            type: "submit",
+            value: "S'inscrire"
+        });
+
+        // Message d'erreur
+        const errorMsg = HTMLBuilder.build("p", {
+            style: "color: red; display: none;"
+        });
+
+        // Gestionnaire de soumission
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            await this.handleRegister(
+                emailInput.value,
+                usernameInput.value,
+                passwordInput.value,
+                errorMsg
+            );
+        };
+
+        // Bouton pour retourner à la connexion
+        const loginButton = this.createLoginButton();
+
+        // Assemblage du formulaire
+        form.append(emailInput, usernameInput, passwordInput, submitButton, errorMsg, loginButton);
+        
+        return form;
+    }
+
+    /**
+     * Crée le bouton pour retourner à la connexion
+     * @private
+     * @returns {HTMLElement} Le bouton
+     */
+    createLoginButton() {
+        const loginButton = HTMLBuilder.build("button", {
+            innerText: "< Retour",
+            style: "color:rgb(86, 86, 86); margin-top: 5px; background:none; filter: none; height:2vw;",
+            type: "button"
+        });
+
+        loginButton.onclick = () => {
+            this.openLogin();
+        };
+
+        return loginButton;
+    }
+
+    /**
+     * Gère la tentative d'inscription
+     * @private
+     * @param {string} email - Email
+     * @param {string} username - Nom d'utilisateur
+     * @param {string} password - Mot de passe
+     * @param {HTMLElement} errorMsg - Élément pour afficher les erreurs
+     */
+    async handleRegister(email, username, password, errorMsg) {
+        try {
+            errorMsg.style.display = "none";
+
+            // Validation côté client
+            if (!this.validateInputs(email, username, password, errorMsg)) {
+                return;
+            }
+
+            const result = await ApiService.register(email, username, password);
+            
+            if (result.success) {
+                this.delete();
+                alert("Inscription réussie ! Vous pouvez maintenant vous connecter.");
+                
+                // Ouvrir automatiquement la fenêtre de connexion
+                this.openLogin();
+            } else {
+                this.showError(errorMsg, result.error || "Erreur d'inscription");
+            }
+        } catch (error) {
+            this.showError(errorMsg, error.message || "Erreur serveur");
+        }
+    }
+
+    /**
+     * Valide les données d'entrée côté client
+     * @private
+     * @param {string} email - Email
+     * @param {string} username - Nom d'utilisateur
+     * @param {string} password - Mot de passe
+     * @param {HTMLElement} errorMsg - Élément pour afficher les erreurs
+     * @returns {boolean} True si les données sont valides
+     */
+    validateInputs(email, username, password, errorMsg) {
+        if (!email || !username || !password) {
+            this.showError(errorMsg, "Tous les champs sont obligatoires");
+            return false;
+        }
+
+        if (password.length < 6) {
+            this.showError(errorMsg, "Le mot de passe doit contenir au moins 6 caractères");
+            return false;
+        }
+
+        if (!this.isValidEmail(email)) {
+            this.showError(errorMsg, "Format d'email invalide");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Vérifie si l'email est valide
+     * @private
+     * @param {string} email - Email à vérifier
+     * @returns {boolean} True si l'email est valide
+     */
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    /**
+     * Affiche un message d'erreur
+     * @private
+     * @param {HTMLElement} errorMsg - Élément pour afficher l'erreur
+     * @param {string} message - Message d'erreur
+     */
+    showError(errorMsg, message) {
+        errorMsg.innerText = message;
+        errorMsg.style.display = "block";
+    }
+
+    /**
+     * Ouvre la fenêtre de connexion
+     * @private
+     */
+    openLogin() {
+        this.delete();
+        const loginWindow = new Login();
+        
+        // Transférer le callback de succès si nécessaire
+        loginWindow.onLoginSuccess = this.onLoginSuccess;
+    }
+}
+
+window.Register = Register;
