@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
         if (!isDragging) {
           isDragging = true;
           app.style.position = "absolute";
-          app.style.zIndex = 1000;
+          app.style.zIndex = 0;
 
           app.style.left = e.clientX - offsetX + "px";
           app.style.top = e.clientY - offsetY + "px";
