@@ -10,34 +10,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 console.log(envVariables);
+// Initialisation de la connexion MongoDB via le module de config
+const DatabaseConfig = require('./config/database');
 
-if (
-  envVariables.MONGO_INITDB_ROOT_USERNAME &&
-  envVariables.MONGO_INITDB_ROOT_PASSWORD
-) {
-  const username = envVariables.MONGO_INITDB_ROOT_USERNAME;
-  const password = envVariables.MONGO_INITDB_ROOT_PASSWORD;
-  const database = "hackemon";
-
-  const mongoUri = `mongodb://${username}:${password}@localhost:27017/${database}?authSource=admin`;
-  console.log(mongoUri);
-  useNewUrlParser: true;
-  useUnifiedTopology: true;
-
-  // Connexion à MongoDB via Mongoose
-  mongoose
-    .connect(mongoUri)
-    .then(() => {
-      console.log("Connexion à MongoDB réussie.");
-    })
-    .catch((err) => {
-      console.error("Erreur de connexion à MongoDB:", err.message);
-    });
-} else {
-  console.error(
-    "Impossible de lire les variables d'environnement. Vérifiez le fichier .env."
-  );
-}
+(async () => {
+        try {
+                // Preference to explicit MONGO_URI (from .env or environment) else fallback to localhost
+                if (envVariables.MONGO_URI) {
+                        await DatabaseConfig.connect(envVariables.MONGO_URI);
+                } else {
+                        // Tentative de connexion locale (utile avec docker-compose local)
+                        await DatabaseConfig.connect();
+                }
+        } catch (err) {
+                console.error('Erreur initialisation MongoDB:', err && err.message ? err.message : err);
+                // On continue pour permettre d'utiliser le serveur en mode dégradé si nécessaire
+        }
+})();
 
 // Middleware parse requêtes JSON
 app.use(express.json());
