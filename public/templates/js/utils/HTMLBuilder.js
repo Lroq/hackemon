@@ -44,5 +44,5 @@ class HTMLBuilder {
     }
 }
 
-// Export pour utilisation globale
-window.HTMLBuilder = HTMLBuilder;
+// Alias non-casse pour compatibilité avec l'ancien code qui utilisait `HTMLbuilder`
+window.HTMLbuilder = HTMLBuilder;
