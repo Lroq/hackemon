@@ -5,12 +5,9 @@ const session = require("express-session");
 
 const readEnvFile = require("./readfile");
 const envVariables = readEnvFile();
-const express = require('express');
-const path = require('path');
-const session = require('express-session');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 console.log(envVariables);
 
@@ -44,7 +41,6 @@ if (
 
 // Middleware parse requêtes JSON
 app.use(express.json());
-const PORT = process.env.PORT || 3000;
 
 class Server {
     constructor() {
