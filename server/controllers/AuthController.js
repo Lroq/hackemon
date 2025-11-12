@@ -1,11 +1,13 @@
-/**
- * Contrôleur pour la gestion de l'authentification (sans base de données)
- */
-const bcrypt = require('bcrypt');
+const { loginUser, setUsersStorage: setLoginUsersStorage } = require('../js/login');
+const { registerUser, setUsersStorage: setRegisterUsersStorage, getUserIdCounter } = require('../js/register');
 
-// Stockage en mémoire des utilisateurs (remplace la base de données)
+// Stockage en mémoire des utilisateurs (partagé avec les modules login et register)
 const users = new Map();
 let userIdCounter = 1;
+
+// Synchroniser le stockage avec les modules
+setLoginUsersStorage(users);
+setRegisterUsersStorage(users, userIdCounter);
 
 class AuthController {
     /**
@@ -15,52 +17,24 @@ class AuthController {
      */
     static async login(req, res) {
         try {
-            const { email, password } = req.body;
+            const credentials = req.body;
+            const result = await loginUser(credentials);
 
-            console.log("Tentative de connexion pour:", email);
-
-            // Chercher l'utilisateur dans le stockage en mémoire
-            let user = null;
-            for (const [id, userData] of users.entries()) {
-                if (userData.email === email) {
-                    user = { id, ...userData };
-                    break;
-                }
-            }
-
-            if (!user) {
-                return res.status(400).json({ 
-                    error: "Email ou mot de passe incorrect.", 
-                    code: "INVALID_CREDENTIALS" 
+            if (result.success) {
+                // Créer la session
+                req.session.userId = result.user.id;
+                res.json(result);
+            } else {
+                const statusCode = result.code === 'MISSING_FIELDS' ? 400 : 
+                                result.code === 'INVALID_CREDENTIALS' ? 400 : 500;
+                res.status(statusCode).json({
+                    error: result.error,
+                    code: result.code
                 });
             }
-
-            // Vérifier le mot de passe
-            const isPasswordValid = await bcrypt.compare(password, user.hashpassword);
-            if (!isPasswordValid) {
-                return res.status(400).json({ 
-                    error: "Email ou mot de passe incorrect.", 
-                    code: "INVALID_CREDENTIALS" 
-                });
-            }
-
-            // Créer la session
-            req.session.userId = user.id;
-
-            console.log("Connexion réussie pour:", user.username);
-
-            res.json({ 
-                success: true, 
-                message: "Connexion réussie.",
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email
-                }
-            });
 
         } catch (error) {
-            console.error("Erreur lors de la connexion:", error);
+            console.error("Erreur dans AuthController.login:", error);
             res.status(500).json({ 
                 error: "Erreur serveur lors de la connexion.", 
                 code: "SERVER_ERROR" 
@@ -75,58 +49,25 @@ class AuthController {
      */
     static async register(req, res) {
         try {
-            const { username, email, password } = req.body;
+            const userData = req.body;
+            const result = await registerUser(userData);
 
-            console.log("Tentative d'inscription pour:", email);
-
-            // Vérifier si l'utilisateur existe déjà
-            let existingUser = null;
-            for (const [id, userData] of users.entries()) {
-                if (userData.email === email || userData.username === username) {
-                    existingUser = userData;
-                    break;
-                }
-            }
-
-            if (existingUser) {
-                const field = existingUser.email === email ? "email" : "nom d'utilisateur";
-                return res.status(400).json({ 
-                    error: `Un utilisateur avec ce ${field} existe déjà.`, 
-                    code: "USER_EXISTS" 
+            if (result.success) {
+                // Mettre à jour le compteur global
+                userIdCounter = getUserIdCounter();
+                res.status(201).json(result);
+            } else {
+                const statusCode = result.code === 'MISSING_FIELDS' ? 400 :
+                                result.code === 'INVALID_PASSWORD' ? 400 :
+                                result.code === 'USER_EXISTS' ? 400 : 500;
+                res.status(statusCode).json({
+                    error: result.error,
+                    code: result.code
                 });
             }
 
-            // Hasher le mot de passe
-            const saltRounds = 12;
-            const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-            // Créer le nouvel utilisateur en mémoire
-            const userId = userIdCounter++;
-            const newUser = {
-                username,
-                email,
-                hashpassword: hashedPassword,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
-
-            users.set(userId, newUser);
-
-            console.log("Inscription réussie pour:", username);
-
-            res.status(201).json({ 
-                success: true,
-                message: "Inscription réussie. Vous pouvez maintenant vous connecter.",
-                user: {
-                    id: userId,
-                    username: newUser.username,
-                    email: newUser.email
-                }
-            });
-
         } catch (error) {
-            console.error("Erreur lors de l'inscription:", error);
-            
+            console.error("Erreur dans AuthController.register:", error);
             res.status(500).json({ 
                 error: "Erreur serveur lors de l'inscription.", 
                 code: "SERVER_ERROR" 

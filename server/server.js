@@ -16,7 +16,7 @@ class Server {
      */
     async initialize() {
         try {
-            console.log('🚀 Initialisation du serveur HackOS...');
+            console.log('Initialisation du serveur HackOS...');
             
             // Configuration des middlewares
             this.setupMiddlewares();
@@ -90,7 +90,7 @@ class Server {
             const routes = require('./routes');
             this.app.use('/', routes);
         } catch (error) {
-            console.error('❌ Erreur lors du chargement des routes:', error.message);
+            console.error('Erreur lors du chargement des routes:', error.message);
             // Routes de base sans dépendances
             this.setupBasicRoutes();
         }
@@ -230,9 +230,7 @@ class Server {
      */
     start() {
         const server = this.app.listen(this.port, () => {
-            console.log(`✅ Serveur HackOS démarré sur le port ${this.port}`);
             console.log(`Application disponible sur: http://localhost:${this.port}`);
-            console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
         });
 
         process.on('SIGINT', () => {

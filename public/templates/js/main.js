@@ -1,31 +1,4 @@
-class HTMLbuilder {
-    static build(type, properties) {
-        const element = document.createElement(type);
-        for (const property in properties) {
-            element[property] = properties[property];
-        }
-        return element;
-    }
-
-    static makeDraggable(element) {
-        let isDragging = false, offsetX, offsetY;
-        element.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            offsetX = e.clientX - element.getBoundingClientRect().left;
-            offsetY = e.clientY - element.getBoundingClientRect().top;
-        });
-        document.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                element.style.position = 'absolute';
-                element.style.left = `${e.clientX - offsetX}px`;
-                element.style.top = `${e.clientY - offsetY}px`;
-            }
-        });
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
-    }
-}
+//import { HTMLbuilder } from "./components/HTMLbuilder.js";
 
 function ondoubleclick(element, func) {
     let lastClick = Date.now();
@@ -381,9 +354,6 @@ document.querySelectorAll('.window').forEach(win => {
         const rect = win.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
-
-        // Place le window tout en haut (z-index)
-        win.style.zIndex = parseInt(Date.now() / 1000);
     });
 
     document.addEventListener('mousemove', (e) => {
