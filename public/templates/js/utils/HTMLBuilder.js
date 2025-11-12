@@ -28,7 +28,6 @@ class HTMLBuilder {
             isDragging = true;
             offsetX = e.clientX - element.getBoundingClientRect().left;
             offsetY = e.clientY - element.getBoundingClientRect().top;
-            element.style.zIndex = parseInt(Date.now() / 1000);
         });
 
         document.addEventListener('mousemove', (e) => {

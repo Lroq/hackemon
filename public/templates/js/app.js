@@ -268,6 +268,7 @@ class AppInitializer {
                 </div>
             </div>
         `;
+        
         document.body.appendChild(errorScreen);
     }
 

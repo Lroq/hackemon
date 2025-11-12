@@ -1,6 +1,6 @@
 class Login extends Window {
     constructor() {
-        super(20, 20, true, "Se connecter");
+        super(20, 50, true, "Se connecter");
         this.onLoginSuccess = null; // Callback pour le succès de connexion
         this.initializeLogin();
     }
