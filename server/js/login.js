@@ -1,4 +1,9 @@
 const bcrypt = require('bcrypt');
+const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
+const { 
+    findUserByEmail, 
+    addRefreshToken 
+} = require('../utils/userTokenManager');
 
 // Stockage en mémoire des utilisateurs (partagé avec AuthController)
 let users = new Map();
@@ -28,14 +33,8 @@ const loginUser = async (credentials) => {
             };
         }
 
-        // Chercher l'utilisateur dans le stockage en mémoire
-        let user = null;
-        for (const [id, userData] of users.entries()) {
-            if (userData.email === email) {
-                user = { id, ...userData };
-                break;
-            }
-        }
+        // Chercher l'utilisateur dans le fichier JSON
+        const user = findUserByEmail(email);
 
         if (!user) {
             return {
@@ -57,14 +56,38 @@ const loginUser = async (credentials) => {
 
         console.log("Connexion réussie pour:", user.username);
 
+        // Générer les tokens JWT
+        const accessToken = generateAccessToken({
+            UUID: user.UUID,
+            username: user.username,
+            email: user.email,
+            level: user.level
+        });
+
+        const refreshToken = generateRefreshToken({
+            UUID: user.UUID,
+            username: user.username
+        });
+
+        // Mettre à jour les tokens de l'utilisateur dans le fichier JSON
+        const tokenAdded = addRefreshToken(user.UUID, refreshToken);
+        
+        if (!tokenAdded) {
+            console.warn("Impossible d'ajouter le refresh token au fichier, mais connexion réussie");
+        }
+
         return {
             success: true,
             message: "Connexion réussie.",
             user: {
-                id: user.id,
+                UUID: user.UUID,
                 username: user.username,
                 email: user.email,
                 level: user.level
+            },
+            tokens: {
+                accessToken,
+                refreshToken
             }
         };
 

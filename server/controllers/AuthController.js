@@ -1,5 +1,6 @@
 const { loginUser, setUsersStorage: setLoginUsersStorage } = require('../js/login');
 const { registerUser, setUsersStorage: setRegisterUsersStorage, getUserIdCounter } = require('../js/register');
+const { refreshAccessToken, revokeRefreshToken } = require('../js/tokenManager');
 
 // Stockage en mémoire des utilisateurs (partagé avec les modules login et register)
 const users = new Map();
@@ -21,12 +22,16 @@ class AuthController {
             const result = await loginUser(credentials);
 
             if (result.success) {
-                // Créer la session
-                req.session.userId = result.user.id;
-                res.json(result);
+                // Réponse avec les tokens JWT
+                res.json({
+                    success: true,
+                    message: result.message,
+                    user: result.user,
+                    tokens: result.tokens
+                });
             } else {
                 const statusCode = result.code === 'MISSING_FIELDS' ? 400 : 
-                                result.code === 'INVALID_CREDENTIALS' ? 400 : 500;
+                                result.code === 'INVALID_CREDENTIALS' ? 401 : 500;
                 res.status(statusCode).json({
                     error: result.error,
                     code: result.code
@@ -55,11 +60,16 @@ class AuthController {
             if (result.success) {
                 // Mettre à jour le compteur global
                 userIdCounter = getUserIdCounter();
-                res.status(201).json(result);
+                res.status(201).json({
+                    success: true,
+                    message: result.message,
+                    user: result.user,
+                    tokens: result.tokens
+                });
             } else {
                 const statusCode = result.code === 'MISSING_FIELDS' ? 400 :
                                 result.code === 'INVALID_PASSWORD' ? 400 :
-                                result.code === 'USER_EXISTS' ? 400 : 500;
+                                result.code === 'USER_EXISTS' ? 409 : 500;
                 res.status(statusCode).json({
                     error: result.error,
                     code: result.code
@@ -76,27 +86,28 @@ class AuthController {
     }
 
     /**
-     * Gère la déconnexion utilisateur
+     * Gère la déconnexion utilisateur (révocation du refresh token)
      * @param {Object} req - Requête Express
      * @param {Object} res - Réponse Express
      */
     static async logout(req, res) {
         try {
-            req.session.destroy((error) => {
-                if (error) {
-                    console.error("Erreur lors de la déconnexion:", error);
-                    return res.status(500).json({ 
-                        error: "Erreur lors de la déconnexion.", 
-                        code: "SERVER_ERROR" 
-                    });
-                }
+            const { refreshToken } = req.body;
+            const result = await revokeRefreshToken({ refreshToken });
 
-                res.clearCookie('connect.sid'); // Nom du cookie par défaut d'express-session
+            if (result.success) {
                 res.json({ 
                     success: true, 
-                    message: "Déconnexion réussie." 
+                    message: result.message 
                 });
-            });
+            } else {
+                const statusCode = result.code === 'MISSING_REFRESH_TOKEN' ? 400 : 500;
+                res.status(statusCode).json({
+                    error: result.error,
+                    code: result.code
+                });
+            }
+
         } catch (error) {
             console.error("Erreur lors de la déconnexion:", error);
             res.status(500).json({ 
@@ -107,13 +118,15 @@ class AuthController {
     }
 
     /**
-     * Récupère le profil de l'utilisateur connecté
+     * Récupère le profil de l'utilisateur connecté (nécessite le middleware JWT)
      * @param {Object} req - Requête Express
      * @param {Object} res - Réponse Express
      */
     static async getProfile(req, res) {
         try {
-            const userData = users.get(req.session.userId);
+            // Utiliser l'utilitaire pour récupérer les données utilisateur
+            const { findUserByUUID } = require('../utils/userTokenManager');
+            const userData = findUserByUUID(req.user.UUID);
             
             if (!userData) {
                 return res.status(404).json({ 
@@ -125,9 +138,10 @@ class AuthController {
             res.json({
                 success: true,
                 user: {
-                    id: req.session.userId,
+                    UUID: userData.UUID,
                     username: userData.username,
                     email: userData.email,
+                    level: userData.level,
                     createdAt: userData.createdAt,
                     updatedAt: userData.updatedAt
                 }
@@ -143,16 +157,53 @@ class AuthController {
     }
 
     /**
-     * Vérifie le statut de la session
+     * Renouvelle un token d'accès
      * @param {Object} req - Requête Express
      * @param {Object} res - Réponse Express
      */
-    static checkSession(req, res) {
-        const isLoggedIn = !!req.session.userId;
+    static async refreshToken(req, res) {
+        try {
+            const { refreshToken } = req.body;
+            const result = await refreshAccessToken({ refreshToken });
+
+            if (result.success) {
+                res.json({
+                    success: true,
+                    message: result.message,
+                    tokens: result.tokens
+                });
+            } else {
+                const statusCode = result.code === 'MISSING_REFRESH_TOKEN' ? 400 :
+                                result.code === 'INVALID_REFRESH_TOKEN' ? 401 :
+                                result.code === 'USER_NOT_FOUND' ? 404 :
+                                result.code === 'UNAUTHORIZED_REFRESH_TOKEN' ? 401 : 500;
+                res.status(statusCode).json({
+                    error: result.error,
+                    code: result.code
+                });
+            }
+
+        } catch (error) {
+            console.error("Erreur lors du renouvellement du token:", error);
+            res.status(500).json({
+                error: "Erreur serveur lors du renouvellement du token.",
+                code: "SERVER_ERROR"
+            });
+        }
+    }
+
+    /**
+     * Vérifie le statut du token (remplace checkSession)
+     * @param {Object} req - Requête Express
+     * @param {Object} res - Réponse Express
+     */
+    static checkTokenStatus(req, res) {
+        // Utilise le middleware optionalAuthenticateJWT
+        const isAuthenticated = !!req.user;
         
         res.json({
-            isLoggedIn,
-            userId: req.session.userId || null
+            isAuthenticated,
+            user: req.user || null
         });
     }
 }

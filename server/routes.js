@@ -9,6 +9,7 @@ const AuthController = require('./controllers/AuthController');
 
 // Middleware
 const { requireAuth, logAuthAttempt } = require('./middleware/auth');
+const { authenticateJWT, optionalAuthenticateJWT } = require('./middleware/jwtAuth');
 const { validateRegisterData, validateLoginData, sanitizeInput } = require('./middleware/validation');
 
 const router = express.Router();
@@ -21,10 +22,13 @@ router.use(['/login', '/register'], logAuthAttempt);
 router.post('/login', validateLoginData, AuthController.login);
 router.post('/register', validateRegisterData, AuthController.register);
 router.post('/logout', AuthController.logout);
+router.post('/refresh-token', AuthController.refreshToken);
 
-// Routes protégées
-router.get('/profile', requireAuth, AuthController.getProfile);
-router.get('/session', AuthController.checkSession);
+// Routes protégées (nécessitent un JWT valide)
+router.get('/profile', authenticateJWT, AuthController.getProfile);
+
+// Routes avec authentification optionnelle
+router.get('/token-status', optionalAuthenticateJWT, AuthController.checkTokenStatus);
 
 // Route principale
 router.get('/', (req, res) => {

@@ -1,5 +1,12 @@
 const bcrypt = require('bcrypt');
 const fs = require('fs');
+const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
+const { 
+    readUsersFromFile, 
+    writeUsersToFile, 
+    findUserByEmail, 
+    addRefreshToken 
+} = require('../utils/userTokenManager');
 
 // Stockage en mémoire des utilisateurs (partagé avec AuthController)
 let users = new Map();
@@ -44,17 +51,13 @@ const registerUser = async (userData) => {
             };
         }
 
-        // Vérifier si l'utilisateur existe déjà
-        let existingUser = null;
-        for (const [id, user] of users.entries()) {
-            if (user.email === email || user.username === username) {
-                existingUser = user;
-                break;
-            }
-        }
+        // Vérifier si l'utilisateur existe déjà dans le fichier JSON
+        const existingData = readUsersFromFile();
+        const existingUserByEmail = findUserByEmail(email);
+        const existingUserByUsername = existingData.find(user => user.username === username);
 
-        if (existingUser) {
-            const field = existingUser.email === email ? "email" : "nom d'utilisateur";
+        if (existingUserByEmail || existingUserByUsername) {
+            const field = existingUserByEmail ? "email" : "nom d'utilisateur";
             return {
                 success: false,
                 error: `Un utilisateur avec ce ${field} existe déjà.`,
@@ -66,8 +69,21 @@ const registerUser = async (userData) => {
         const saltRounds = 12;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        // Créer le nouvel utilisateur avec UUID
+                // Générer les tokens JWT d'abord
         const userUUID = require('uuid').v4();
+        const accessToken = generateAccessToken({
+            UUID: userUUID,
+            username,
+            email,
+            level: 1
+        });
+
+        const refreshToken = generateRefreshToken({
+            UUID: userUUID,
+            username
+        });
+
+        // Créer le nouvel utilisateur avec UUID et tokens
         const newUser = {
             UUID: userUUID,
             username,
@@ -75,30 +91,22 @@ const registerUser = async (userData) => {
             hashpassword: hashedPassword,
             createdAt: new Date(),
             updatedAt: new Date(),
+            tokens: [refreshToken], // Stockage du refresh token dans la DB
             level: 1
         };
 
-        const fileName = `./test.json`;
-
-        let existingData = [];
-        try {
-            if (fs.existsSync(fileName)) {
-                const fileContent = fs.readFileSync(fileName, 'utf8');
-                existingData = JSON.parse(fileContent);
-            }
-        } catch (error) {
-            console.error("Erreur lors de la lecture du fichier:", error);
-            existingData = [];
-        }
-
-        existingData.push(newUser);
+        // Sauvegarder dans le fichier JSON
+        const currentUsers = readUsersFromFile();
+        currentUsers.push(newUser);
 
         // Écrire les données dans le fichier
-        try {
-            fs.writeFileSync(fileName, JSON.stringify(existingData, null, 2));
-            console.log(`Utilisateur sauvegardé dans ${fileName}`);
-        } catch (error) {
-            console.error("Erreur lors de l'écriture du fichier:", error);
+        const saveSuccess = writeUsersToFile(currentUsers);
+        if (!saveSuccess) {
+            return {
+                success: false,
+                error: "Erreur lors de la sauvegarde de l'utilisateur.",
+                code: "SAVE_ERROR"
+            };
         }
 
         users.set(userUUID, newUser);
@@ -113,6 +121,10 @@ const registerUser = async (userData) => {
                 username: newUser.username,
                 email: newUser.email,
                 level: newUser.level
+            },
+            tokens: {
+                accessToken,
+                refreshToken
             }
         };
 
