@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const fs = require('fs');
+const User = require('../models/User');
 
 // Stockage en mémoire des utilisateurs (partagé avec AuthController)
 let users = new Map();
@@ -78,43 +79,55 @@ const registerUser = async (userData) => {
             level: 1
         };
 
-        const fileName = `./test.json`;
-
-        let existingData = [];
+        // Sauvegarde utilisateur dans MongoDB avec Mongoose
         try {
-            if (fs.existsSync(fileName)) {
-                const fileContent = fs.readFileSync(fileName, 'utf8');
-                existingData = JSON.parse(fileContent);
-            }
-        } catch (error) {
-            console.error("Erreur lors de la lecture du fichier:", error);
-            existingData = [];
-        }
-
-        existingData.push(newUser);
-
-        // Écrire les données dans le fichier
-        try {
-            fs.writeFileSync(fileName, JSON.stringify(existingData, null, 2));
-            console.log(`Utilisateur sauvegardé dans ${fileName}`);
-        } catch (error) {
-            console.error("Erreur lors de l'écriture du fichier:", error);
-        }
-
-        users.set(userUUID, newUser);
-
-        console.log("Inscription réussie pour:", username);
-
-        return {
-            success: true,
-            message: "Inscription réussie. Vous pouvez maintenant vous connecter.",
-            user: {
+            const userDoc = new User({
                 UUID: userUUID,
                 username: newUser.username,
                 email: newUser.email,
+                hashpassword: newUser.hashpassword,
                 level: newUser.level
+            });
+
+            const savedUser = await userDoc.save();
+            // Update profile 
+            users.set(userUUID, {
+                UUID: savedUser.UUID,
+                username: savedUser.username,
+                email: savedUser.email,
+                hashpassword: savedUser.hashpassword,
+                createdAt: savedUser.createdAt,
+                updatedAt: savedUser.updatedAt,
+                level: savedUser.level
+            });
+
+            console.log("Inscription réussie pour:", username);
+
+            return {
+                success: true,
+                message: "Inscription réussie. Vous pouvez maintenant vous connecter.",
+                user: {
+                    UUID: savedUser.UUID,
+                    username: savedUser.username,
+                    email: savedUser.email,
+                    level: savedUser.level
+                }
+            };
+        } catch (error) {
+            console.error("Erreur lors de la sauvegarde en base:", error);
+            if (error.name === 'MongoServerError' && error.code === 11000) {
+                return {
+                    success: false,
+                    error: "Un utilisateur avec cet email existe déjà.",
+                    code: "USER_EXISTS"
+                };
             }
-        };
+            return {
+                success: false,
+                error: "Erreur serveur lors de l'inscription.",
+                code: "SERVER_ERROR"
+            };
+        }
 
     } catch (error) {
         console.error("Erreur lors de l'inscription:", error);

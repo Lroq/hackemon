@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const User = require('../models/User');
 
 // Stockage en mémoire des utilisateurs (partagé avec AuthController)
 let users = new Map();
@@ -28,16 +29,10 @@ const loginUser = async (credentials) => {
             };
         }
 
-        // Chercher l'utilisateur dans le stockage en mémoire
-        let user = null;
-        for (const [id, userData] of users.entries()) {
-            if (userData.email === email) {
-                user = { id, ...userData };
-                break;
-            }
-        }
+        // Chercher l'utilisateur dans la base MongoDB
+        const userDoc = await User.findOne({ email }).lean();
 
-        if (!user) {
+        if (!userDoc) {
             return {
                 success: false,
                 error: "Email ou mot de passe incorrect.",
@@ -46,7 +41,7 @@ const loginUser = async (credentials) => {
         }
 
         // Vérifier le mot de passe
-        const isPasswordValid = await bcrypt.compare(password, user.hashpassword);
+        const isPasswordValid = await bcrypt.compare(password, userDoc.hashpassword);
         if (!isPasswordValid) {
             return {
                 success: false,
@@ -55,16 +50,31 @@ const loginUser = async (credentials) => {
             };
         }
 
-        console.log("Connexion réussie pour:", user.username);
+        // update en mémoire 
+        try {
+            users.set(userDoc.UUID, {
+                UUID: userDoc.UUID,
+                username: userDoc.username,
+                email: userDoc.email,
+                hashpassword: userDoc.hashpassword,
+                level: userDoc.level,
+                createdAt: userDoc.createdAt,
+                updatedAt: userDoc.updatedAt
+            });
+        } catch (e) {
+            // ignore
+        }
+
+        console.log("Connexion réussie pour:", userDoc.username);
 
         return {
             success: true,
             message: "Connexion réussie.",
             user: {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                level: user.level
+                id: userDoc.UUID,
+                username: userDoc.username,
+                email: userDoc.email,
+                level: userDoc.level
             }
         };
 

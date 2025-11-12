@@ -1,5 +1,6 @@
 const { loginUser, setUsersStorage: setLoginUsersStorage } = require('../js/login');
 const { registerUser, setUsersStorage: setRegisterUsersStorage, getUserIdCounter } = require('../js/register');
+const User = require('../models/User');
 
 // Stockage en mémoire des utilisateurs (partagé avec les modules login et register)
 const users = new Map();
@@ -113,8 +114,23 @@ class AuthController {
      */
     static async getProfile(req, res) {
         try {
-            const userData = users.get(req.session.userId);
-            
+            let userData = users.get(req.session.userId);
+
+            if (!userData && req.session && req.session.userId) {
+                const userDoc = await User.findOne({ UUID: req.session.userId }).lean();
+                if (userDoc) {
+                    userData = {
+                        UUID: userDoc.UUID,
+                        username: userDoc.username,
+                        email: userDoc.email,
+                        createdAt: userDoc.createdAt,
+                        updatedAt: userDoc.updatedAt,
+                        level: userDoc.level
+                    };
+                    try { users.set(userDoc.UUID, userData); } catch (e) {}
+                }
+            }
+
             if (!userData) {
                 return res.status(404).json({ 
                     error: "Utilisateur non trouvé.", 
