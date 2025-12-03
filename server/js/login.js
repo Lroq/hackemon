@@ -1,10 +1,11 @@
 const bcrypt = require('bcrypt');
-const User = require('../models/User');
-const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
-const { 
-    findUserByEmail, 
-    addRefreshToken 
-} = require('../utils/userTokenManager');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User.js'); // Importe le modèle User
+
+const JWT_SECRET = process.env.JWT_SECRET || 'hackemon_jwt_secret';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
+
+const router = express.Router();
 
 // Stockage en mémoire des utilisateurs (partagé avec AuthController)
 let users = new Map();
@@ -41,131 +42,28 @@ const loginUser = async (credentials) => {
             // Chercher l'utilisateur dans le fichier JSON
             const user = findUserByEmail(email);
 
-            if (!user) {
-                return {
-                    success: false,
-                    error: "Email ou mot de passe incorrect.",
-                    code: "INVALID_CREDENTIALS"
-                };
-            }
-
-            // Vérifier le mot de passe pour l'utilisateur du fichier JSON
-            const isPasswordValid = await bcrypt.compare(password, user.hashpassword);
-            if (!isPasswordValid) {
-                return {
-                    success: false,
-                    error: "Email ou mot de passe incorrect.",
-                    code: "INVALID_CREDENTIALS"
-                };
-            }
-
-            // Générer les tokens JWT pour l'utilisateur du fichier JSON
-            const accessToken = generateAccessToken({
-                UUID: user.UUID,
-                username: user.username,
-                email: user.email,
-                level: user.level
-            });
-
-            const refreshToken = generateRefreshToken({
-                UUID: user.UUID,
-                username: user.username
-            });
-
-            // Mettre à jour les tokens de l'utilisateur dans le fichier JSON
-            const tokenAdded = addRefreshToken(user.UUID, refreshToken);
-            
-            if (!tokenAdded) {
-                console.warn("Impossible d'ajouter le refresh token au fichier, mais connexion réussie");
-            }
-
-            console.log("Connexion réussie pour:", user.username);
-
-            return {
-                success: true,
-                message: "Connexion réussie.",
-                user: {
-                    UUID: user.UUID,
-                    username: user.username,
-                    email: user.email,
-                    level: user.level
-                },
-                tokens: {
-                    accessToken,
-                    refreshToken
-                }
-            };
+        if (!user) {
+            return res.status(400).json({ error: "Email or password is incorrect." });
         }
 
-        // Vérifier le mot de passe pour l'utilisateur de MongoDB
-        const isPasswordValid = await bcrypt.compare(password, userDoc.hashpassword);
-        if (!isPasswordValid) {
-            return {
-                success: false,
-                error: "Email ou mot de passe incorrect.",
-                code: "INVALID_CREDENTIALS"
-            };
+        // Verify the password
+        const match = await bcrypt.compare(password, user.hashpassword);
+        if (!match) {
+            return res.status(400).json({ error: "Email or password is incorrect." });
         }
 
-        // Mettre à jour en mémoire 
-        try {
-            users.set(userDoc.UUID, {
-                UUID: userDoc.UUID,
-                username: userDoc.username,
-                email: userDoc.email,
-                hashpassword: userDoc.hashpassword,
-                level: userDoc.level,
-                createdAt: userDoc.createdAt,
-                updatedAt: userDoc.updatedAt
-            });
-        } catch (e) {
-            // ignore
-        }
-
-        console.log("Connexion réussie pour:", userDoc.username);
-
-        // Générer les tokens JWT
-        const accessToken = generateAccessToken({
-            UUID: userDoc.UUID,
-            username: userDoc.username,
-            email: userDoc.email,
-            level: userDoc.level
-        });
-
-        const refreshToken = generateRefreshToken({
-            UUID: userDoc.UUID,
-            username: userDoc.username
-        });
-
-        // Mettre à jour les tokens de l'utilisateur
-        const tokenAdded = addRefreshToken(userDoc.UUID, refreshToken);
-        
-        if (!tokenAdded) {
-            console.warn("Impossible d'ajouter le refresh token, mais connexion réussie");
-        }
-
-        return {
-            success: true,
-            message: "Connexion réussie.",
-            user: {
-                UUID: userDoc.UUID,
-                username: userDoc.username,
-                email: userDoc.email,
-                level: userDoc.level
-            },
-            tokens: {
-                accessToken,
-                refreshToken
-            }
+        const tokenPayload = {
+            userId: user._id.toString(),
+            username: user.username,
+            email: user.email
         };
 
-    } catch (error) {
-        console.error("Erreur lors de la connexion:", error);
-        return {
-            success: false,
-            error: "Erreur serveur lors de la connexion.",
-            code: "SERVER_ERROR"
-        };
+        const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+        res.json({ success: true, token, user: tokenPayload });
+    } catch (err) {
+        console.error("Error processing request:", err.message);
+        res.status(500).json({ error: "Error processing request." });
     }
 };
 

@@ -1,163 +1,60 @@
-const bcrypt = require('bcrypt');
-const fs = require('fs');
-const User = require('../models/User');
-const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
-const { 
-    readUsersFromFile, 
-    writeUsersToFile, 
-    findUserByEmail, 
-    addRefreshToken 
-} = require('../utils/userTokenManager');
+const express = require("express");
+const bcrypt = require("bcrypt");
+const User = require("../models/User.js"); // Importe le modèle User
 
-// Stockage en mémoire des utilisateurs (partagé avec AuthController)
-let users = new Map();
-let userIdCounter = 1;
+const router = express.Router();
 
-// Fonction pour définir le stockage externe (appelée depuis AuthController)
-const setUsersStorage = (usersMap, counter) => {
-    users = usersMap;
-    userIdCounter = counter;
-};
+//Route d'inscription
+router.post("/", async (req, res) => {
+  console.log("Données d'inscription reçues :", req.body);
+  const { username, email, password } = req.body;
 
-// Fonction pour obtenir le compteur tuel
-const getUserIdCounter = () => userIdCounter;
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "Tous les champs sont requis." });
+  }
 
-/**
- * Logique d'inscription utilisateur
- * @param {Object} userData - Les données de l'utilisateur {username, email, password}
- * @returns {Object} - Résultat de l'inscription
- */
-const registerUser = async (userData) => {
-    try {
-        const { username, email, password } = userData;
+  try {
+    // Vérifier si l'utilisateur existe déjà
+    const existingUser = await User.findOne({ email });
 
-        console.log("Tentative d'inscription pour:", email);
-
-        // Validation des champs requis
-        if (!username || !email || !password) {
-            return {
-                success: false,
-                error: "Tous les champs sont requis.",
-                code: "MISSING_FIELDS"
-            };
-        }
-
-        // Validation du mot de passe
-        const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{12,}/;
-        if (!passwordRegex.test(password)) {
-            return {
-                success: false,
-                error: "Le mot de passe doit contenir au moins 12 caractères, un chiffre, une lettre majuscule, une lettre minuscule et un caractère spécial.",
-                code: "INVALID_PASSWORD"
-            };
-        }
-
-        // Vérifier si l'utilisateur existe déjà dans le fichier JSON
-        const existingData = readUsersFromFile();
-        const existingUserByEmail = findUserByEmail(email);
-        const existingUserByUsername = existingData.find(user => user.username === username);
-
-        if (existingUserByEmail || existingUserByUsername) {
-            const field = existingUserByEmail ? "email" : "nom d'utilisateur";
-            return {
-                success: false,
-                error: `Un utilisateur avec ce ${field} existe déjà.`,
-                code: "USER_EXISTS"
-            };
-        }
-
-        // Hasher le mot de passe
-        const saltRounds = 12;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-                // Générer les tokens JWT d'abord
-        const userUUID = require('uuid').v4();
-        const accessToken = generateAccessToken({
-            UUID: userUUID,
-            username,
-            email,
-            level: 1
-        });
-
-        const refreshToken = generateRefreshToken({
-            UUID: userUUID,
-            username
-        });
-
-        // Créer le nouvel utilisateur avec UUID et tokens
-        const newUser = {
-            UUID: userUUID,
-            username,
-            email,
-            hashpassword: hashedPassword,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            tokens: [refreshToken], // Stockage du refresh token dans la DB
-            level: 1
-        };
-
-        // Sauvegarde utilisateur dans MongoDB avec Mongoose
-        try {
-            const userDoc = new User({
-                UUID: userUUID,
-                username: newUser.username,
-                email: newUser.email,
-                hashpassword: newUser.hashpassword,
-                level: newUser.level
-            });
-
-            const savedUser = await userDoc.save();
-            // Update profile 
-            users.set(userUUID, {
-                UUID: savedUser.UUID,
-                username: savedUser.username,
-                email: savedUser.email,
-                hashpassword: savedUser.hashpassword,
-                createdAt: savedUser.createdAt,
-                updatedAt: savedUser.updatedAt,
-                level: savedUser.level
-            });
-
-            console.log("Inscription réussie pour:", username);
-
-            return {
-                success: true,
-                message: "Inscription réussie. Vous pouvez maintenant vous connecter.",
-                user: {
-                    UUID: savedUser.UUID,
-                    username: savedUser.username,
-                    email: savedUser.email,
-                    level: savedUser.level
-                }
-            };
-        } catch (error) {
-            console.error("Erreur lors de la sauvegarde en base:", error);
-            if (error.name === 'MongoServerError' && error.code === 11000) {
-                return {
-                    success: false,
-                    error: "Un utilisateur avec cet email existe déjà.",
-                    code: "USER_EXISTS"
-                };
-            }
-            return {
-                success: false,
-                error: "Erreur serveur lors de l'inscription.",
-                code: "SERVER_ERROR"
-            };
-        }
-
-    } catch (error) {
-        console.error("Erreur lors de l'inscription:", error);
-        return {
-            success: false,
-            error: "Erreur serveur lors de l'inscription.",
-            code: "SERVER_ERROR"
-        };
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ error: "Un utilisateur avec cet email existe déjà." });
     }
-};
 
-module.exports = {
-    registerUser,
-    setUsersStorage,
-    getUserIdCounter
-};
+    // Validation du mot de passe
+    const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{12,}/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        error:
+          "Le mot de passe doit contenir au moins 12 caractères, un chiffre, une lettre majuscule, une lettre minuscule et un caractère spécial.",
+      });
+    }
+
+    // Hasher le mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Créer un nouvel utilisateur
+    console.log("Création d'un nouvel utilisateur avec les données :", {
+      username,
+      email,
+      hashedPassword,
+    });
+
+    const newUser = new User({
+      username,
+      email,
+      hashpassword: hashedPassword,
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: "Inscription réussie." });
+  } catch (err) {
+    console.error("Erreur lors de l'inscription:", err.message);
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+module.exports = router;
