@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const User = require('../models/User');
 const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
 const { 
     findUserByEmail, 
@@ -33,19 +34,71 @@ const loginUser = async (credentials) => {
             };
         }
 
-        // Chercher l'utilisateur dans le fichier JSON
-        const user = findUserByEmail(email);
+        // Chercher l'utilisateur dans la base MongoDB
+        const userDoc = await User.findOne({ email }).lean();
 
-        if (!user) {
+        if (!userDoc) {
+            // Chercher l'utilisateur dans le fichier JSON
+            const user = findUserByEmail(email);
+
+            if (!user) {
+                return {
+                    success: false,
+                    error: "Email ou mot de passe incorrect.",
+                    code: "INVALID_CREDENTIALS"
+                };
+            }
+
+            // Vérifier le mot de passe pour l'utilisateur du fichier JSON
+            const isPasswordValid = await bcrypt.compare(password, user.hashpassword);
+            if (!isPasswordValid) {
+                return {
+                    success: false,
+                    error: "Email ou mot de passe incorrect.",
+                    code: "INVALID_CREDENTIALS"
+                };
+            }
+
+            // Générer les tokens JWT pour l'utilisateur du fichier JSON
+            const accessToken = generateAccessToken({
+                UUID: user.UUID,
+                username: user.username,
+                email: user.email,
+                level: user.level
+            });
+
+            const refreshToken = generateRefreshToken({
+                UUID: user.UUID,
+                username: user.username
+            });
+
+            // Mettre à jour les tokens de l'utilisateur dans le fichier JSON
+            const tokenAdded = addRefreshToken(user.UUID, refreshToken);
+            
+            if (!tokenAdded) {
+                console.warn("Impossible d'ajouter le refresh token au fichier, mais connexion réussie");
+            }
+
+            console.log("Connexion réussie pour:", user.username);
+
             return {
-                success: false,
-                error: "Email ou mot de passe incorrect.",
-                code: "INVALID_CREDENTIALS"
+                success: true,
+                message: "Connexion réussie.",
+                user: {
+                    UUID: user.UUID,
+                    username: user.username,
+                    email: user.email,
+                    level: user.level
+                },
+                tokens: {
+                    accessToken,
+                    refreshToken
+                }
             };
         }
 
-        // Vérifier le mot de passe
-        const isPasswordValid = await bcrypt.compare(password, user.hashpassword);
+        // Vérifier le mot de passe pour l'utilisateur de MongoDB
+        const isPasswordValid = await bcrypt.compare(password, userDoc.hashpassword);
         if (!isPasswordValid) {
             return {
                 success: false,
@@ -54,36 +107,51 @@ const loginUser = async (credentials) => {
             };
         }
 
-        console.log("Connexion réussie pour:", user.username);
+        // Mettre à jour en mémoire 
+        try {
+            users.set(userDoc.UUID, {
+                UUID: userDoc.UUID,
+                username: userDoc.username,
+                email: userDoc.email,
+                hashpassword: userDoc.hashpassword,
+                level: userDoc.level,
+                createdAt: userDoc.createdAt,
+                updatedAt: userDoc.updatedAt
+            });
+        } catch (e) {
+            // ignore
+        }
+
+        console.log("Connexion réussie pour:", userDoc.username);
 
         // Générer les tokens JWT
         const accessToken = generateAccessToken({
-            UUID: user.UUID,
-            username: user.username,
-            email: user.email,
-            level: user.level
+            UUID: userDoc.UUID,
+            username: userDoc.username,
+            email: userDoc.email,
+            level: userDoc.level
         });
 
         const refreshToken = generateRefreshToken({
-            UUID: user.UUID,
-            username: user.username
+            UUID: userDoc.UUID,
+            username: userDoc.username
         });
 
-        // Mettre à jour les tokens de l'utilisateur dans le fichier JSON
-        const tokenAdded = addRefreshToken(user.UUID, refreshToken);
+        // Mettre à jour les tokens de l'utilisateur
+        const tokenAdded = addRefreshToken(userDoc.UUID, refreshToken);
         
         if (!tokenAdded) {
-            console.warn("Impossible d'ajouter le refresh token au fichier, mais connexion réussie");
+            console.warn("Impossible d'ajouter le refresh token, mais connexion réussie");
         }
 
         return {
             success: true,
             message: "Connexion réussie.",
             user: {
-                UUID: user.UUID,
-                username: user.username,
-                email: user.email,
-                level: user.level
+                UUID: userDoc.UUID,
+                username: userDoc.username,
+                email: userDoc.email,
+                level: userDoc.level
             },
             tokens: {
                 accessToken,

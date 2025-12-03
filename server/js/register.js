@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const fs = require('fs');
+const User = require('../models/User');
 const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
 const { 
     readUsersFromFile, 
@@ -95,24 +96,55 @@ const registerUser = async (userData) => {
             level: 1
         };
 
-        // Sauvegarder dans le fichier JSON
-        const currentUsers = readUsersFromFile();
-        currentUsers.push(newUser);
+        // Sauvegarde utilisateur dans MongoDB avec Mongoose
+        try {
+            const userDoc = new User({
+                UUID: userUUID,
+                username: newUser.username,
+                email: newUser.email,
+                hashpassword: newUser.hashpassword,
+                level: newUser.level
+            });
 
-        // Écrire les données dans le fichier
-        const saveSuccess = writeUsersToFile(currentUsers);
-        if (!saveSuccess) {
+            const savedUser = await userDoc.save();
+            // Update profile 
+            users.set(userUUID, {
+                UUID: savedUser.UUID,
+                username: savedUser.username,
+                email: savedUser.email,
+                hashpassword: savedUser.hashpassword,
+                createdAt: savedUser.createdAt,
+                updatedAt: savedUser.updatedAt,
+                level: savedUser.level
+            });
+
+            console.log("Inscription réussie pour:", username);
+
+            return {
+                success: true,
+                message: "Inscription réussie. Vous pouvez maintenant vous connecter.",
+                user: {
+                    UUID: savedUser.UUID,
+                    username: savedUser.username,
+                    email: savedUser.email,
+                    level: savedUser.level
+                }
+            };
+        } catch (error) {
+            console.error("Erreur lors de la sauvegarde en base:", error);
+            if (error.name === 'MongoServerError' && error.code === 11000) {
+                return {
+                    success: false,
+                    error: "Un utilisateur avec cet email existe déjà.",
+                    code: "USER_EXISTS"
+                };
+            }
             return {
                 success: false,
-                error: "Erreur lors de la sauvegarde de l'utilisateur.",
-                code: "SAVE_ERROR"
+                error: "Erreur serveur lors de l'inscription.",
+                code: "SERVER_ERROR"
             };
         }
-
-        users.set(userUUID, newUser);
-
-        console.log("Inscription réussie pour:", username);
-
         return {
             success: true,
             message: "Inscription réussie. Vous pouvez maintenant vous connecter.",

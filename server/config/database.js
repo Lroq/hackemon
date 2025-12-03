@@ -16,24 +16,25 @@ class DatabaseConfig {
      */
     async connect() {
         try {
-            if (!this.envVariables.MONGO_INITDB_ROOT_USERNAME || !this.envVariables.MONGO_INITDB_ROOT_PASSWORD) {
-                throw new Error('Impossible de lire les variables d\'environnement. Vérifiez le fichier .env.');
+            // Priorité: URI explicite passée en argument -> MONGO_URI dans .env -> fallback local
+            const database = 'hackemon';
+
+            // allow connect(uri) call
+            const explicitUri = arguments && arguments.length > 0 ? arguments[0] : null;
+
+            let mongoUri = explicitUri || this.envVariables.MONGO_URI || null;
+
+            if (!mongoUri) {
+                // Fallback to local Mongo without auth for local dev/docker-compose
+                mongoUri = `mongodb://127.0.0.1:27017/${database}`;
             }
 
-            const { MONGO_INITDB_ROOT_USERNAME: username, MONGO_INITDB_ROOT_PASSWORD: password } = this.envVariables;
-            const database = "hackemon";
+            console.log('Connexion à MongoDB via URI:', mongoUri);
 
-            const mongoUri = `mongodb://${username}:${password}@localhost:27017/${database}?authSource=admin`;
-            
-            console.log('Connexion à MongoDB...');
-            
-            this.connection = await mongoose.connect(mongoUri, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true
-            });
+            this.connection = await mongoose.connect(mongoUri);
 
             console.log('Connexion à MongoDB réussie.');
-            
+
             // Écouter les événements de connexion
             this.setupConnectionEvents();
             
@@ -90,3 +91,5 @@ class DatabaseConfig {
 }
 
 module.exports = new DatabaseConfig();
+
+// --------MongoDB Local----------
