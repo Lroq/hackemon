@@ -138,22 +138,20 @@ class Login extends Window {
         "padding: 10px; padding-right: 40px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box;",
     });
 
-    // Bouton pour afficher/masquer le mot de passe
+    // Bouton pour afficher/masquer le mot de passe (icônes Font Awesome)
     const toggleButton = HTMLBuilder.build("button", {
       type: "button",
-      innerText: "👁️",
+      innerHTML: '<i class="fa-solid fa-eye" style="color:#aaa;"></i>',
       style:
-        "position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2em;",
+        "position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2em; outline: none; box-shadow: none; filter: none;",
     });
 
     toggleButton.onclick = () => {
-      if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-        toggleButton.innerText = "🙈";
-      } else {
-        passwordInput.type = "password";
-        toggleButton.innerText = "👁️";
-      }
+      const isHidden = passwordInput.type === "password";
+      passwordInput.type = isHidden ? "text" : "password";
+      toggleButton.innerHTML = isHidden
+        ? '<i class="fa-solid fa-eye-slash" style="color:#aaa;"></i>'
+        : '<i class="fa-solid fa-eye" style="color:#aaa;"></i>';
     };
 
     container.append(passwordInput, toggleButton);

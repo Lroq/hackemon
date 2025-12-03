@@ -42,12 +42,36 @@ class Register extends Window {
       required: true,
     });
 
+    // Champ mot de passe avec bouton afficher/masquer
+    const passwordContainer = HTMLBuilder.build("div", {
+      style: "position: relative; width: 100%;",
+    });
+
     const passwordInput = HTMLBuilder.build("input", {
       type: "password",
       placeholder: "Mot de passe",
       required: true,
       minLength: 12,
+      style:
+        "padding: 10px; padding-right: 40px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box;",
     });
+
+    const togglePassword = HTMLBuilder.build("button", {
+      type: "button",
+      innerHTML: '<i class="fa-solid fa-eye" style="color:#aaa;"></i>',
+      style:
+        "position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2em; outline: none; box-shadow: none; filter: none;",
+    });
+
+    togglePassword.onclick = () => {
+      const isHidden = passwordInput.type === "password";
+      passwordInput.type = isHidden ? "text" : "password";
+      togglePassword.innerHTML = isHidden
+        ? '<i class="fa-solid fa-eye-slash" style="color:#aaa;"></i>'
+        : '<i class="fa-solid fa-eye" style="color:#aaa;"></i>';
+    };
+
+    passwordContainer.append(passwordInput, togglePassword);
 
     const submitButton = HTMLBuilder.build("input", {
       type: "submit",
@@ -87,7 +111,7 @@ class Register extends Window {
     form.append(
       emailInput,
       usernameInput,
-      passwordInput,
+      passwordContainer,
       submitButton,
       errorMsg,
       loginButton

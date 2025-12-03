@@ -200,10 +200,30 @@ class Login extends Window {
       type: 'text',
       placeholder: "Nom d'utilisateur",
     });
+
+    // Champ mot de passe avec bouton afficher/masquer
+    const passwordContainer = HTMLbuilder.build('div', {
+      style: 'position: relative; width: 100%;',
+    });
     const password = HTMLbuilder.build('input', {
       type: 'password',
       placeholder: 'Mot de passe',
+      style: 'padding-right: 40px; box-sizing: border-box; width: 100%;',
     });
+    const togglePassword = HTMLbuilder.build('button', {
+      type: 'button',
+      innerHTML: '<i class=\"fa-solid fa-eye\" style=\"color:#aaa;\"></i>',
+      style:
+        'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1em; outline: none; box-shadow: none; filter: none;',
+    });
+    togglePassword.onclick = () => {
+      const isHidden = password.type === 'password';
+      password.type = isHidden ? 'text' : 'password';
+      togglePassword.innerHTML = isHidden
+        ? '<i class=\"fa-solid fa-eye-slash\" style=\"color:#aaa;\"></i>'
+        : '<i class=\"fa-solid fa-eye\" style=\"color:#aaa;\"></i>';
+    };
+    passwordContainer.append(password, togglePassword);
     const submit = HTMLbuilder.build('input', {
       type: 'submit',
       value: 'Se connecter',
@@ -308,7 +328,7 @@ class Login extends Window {
       const registerWindow = new Register();
     };
 
-    form.append(username, password, submit, errorMsg, registerButton);
+    form.append(username, passwordContainer, submit, errorMsg, registerButton);
     super.append(form);
   }
 
@@ -352,10 +372,30 @@ class Register extends Window {
       type: 'text',
       placeholder: "Nom d'utilisateur",
     });
+
+    // Champ mot de passe avec bouton afficher/masquer
+    const passwordContainer = HTMLbuilder.build('div', {
+      style: 'position: relative; width: 100%;',
+    });
     const password = HTMLbuilder.build('input', {
       type: 'password',
       placeholder: 'Mot de passe',
+      style: 'padding-right: 40px; box-sizing: border-box; width: 100%;',
     });
+    const togglePassword = HTMLbuilder.build('button', {
+      type: 'button',
+      innerHTML: '<i class=\"fa-solid fa-eye\" style=\"color:#aaa;\"></i>',
+      style:
+        'position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1em; outline: none; box-shadow: none; filter: none;',
+    });
+    togglePassword.onclick = () => {
+      const isHidden = password.type === 'password';
+      password.type = isHidden ? 'text' : 'password';
+      togglePassword.innerHTML = isHidden
+        ? '<i class=\"fa-solid fa-eye-slash\" style=\"color:#aaa;\"></i>'
+        : '<i class=\"fa-solid fa-eye\" style=\"color:#aaa;\"></i>';
+    };
+    passwordContainer.append(password, togglePassword);
     const submit = HTMLbuilder.build('input', {
       type: 'submit',
       value: "S'inscrire",
@@ -472,7 +512,7 @@ class Register extends Window {
       const loginWindow = new Login();
     };
 
-    form.append(mail, username, password, submit, errorMsg, loginButton);
+    form.append(mail, username, passwordContainer, submit, errorMsg, loginButton);
     super.append(form);
   }
 }
