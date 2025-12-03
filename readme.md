@@ -42,7 +42,28 @@ server/
     └── register.js
 ```
 
-## 🚀 Améliorations Apportées
+## � Installation des Dépendances
+
+### Dépendances Essentielles
+
+Pour installer toutes les dépendances nécessaires au projet, exécutez la commande suivante :
+
+```bash
+npm install axios bcrypt connect-mongo dotenv express express-session fs jsonwebtoken mongoose node uuid
+```
+
+**Description des dépendances principales :**
+- `express` : Framework web pour Node.js
+- `mongoose` : ODM pour MongoDB
+- `bcrypt` : Chiffrement des mots de passe
+- `jsonwebtoken` : Gestion des tokens JWT
+- `express-session` : Gestion des sessions
+- `connect-mongo` : Stockage des sessions MongoDB
+- `axios` : Client HTTP pour les requêtes API
+- `dotenv` : Gestion des variables d'environnement
+- `uuid` : Génération d'identifiants uniques
+
+## �🚀 Améliorations Apportées
 
 ### Côté Client
 
@@ -69,18 +90,20 @@ server/
 ## 🔧 Installation et Démarrage
 
 ### Prérequis
-- Node.js
+- Node.js (version 16 ou supérieure)
 - MongoDB
 - Fichier `.env` avec les credentials MongoDB
 
-### Installation des nouvelles dépendances
+### Installation complète
 ```bash
-npm install connect-mongo
+# Installation de toutes les dépendances
+npm install axios bcrypt connect-mongo dotenv express express-session fs jsonwebtoken mongoose node uuid
 ```
 
 ### Démarrage
 ```bash
-# Depuis le répertoire server/
+# Depuis le répertoire racine du projet
+cd server/
 node server.js
 ```
 
