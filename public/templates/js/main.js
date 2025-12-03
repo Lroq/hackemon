@@ -158,33 +158,95 @@ class Window {
 class Menu extends Window {
   constructor() {
     super(30, 50, true, 'Menu');
+    this.render();
+  }
 
-    super.append(
-      HTMLbuilder.build('h1', {
-        innerText: 'Bienvenue sur HackOS',
-        style: 'color: #b2533f;',
-      })
-    );
-    super.append(
-      HTMLbuilder.build('p', {
-        innerText:
-          'Apprenez à vous prémunir contre les menaces liées à la cybersécurité!',
-      })
-    );
+  render() {
+    // Clear content
+    const holderContent = this._getHolderContent();
+    if (holderContent) {
+      holderContent.innerHTML = '';
+    }
 
-    const login = HTMLbuilder.build('button', {
-      innerText: "Se connecter ou s'inscrire",
-      style: 'background: #3e9587; color: white',
+    // Add title and description
+    const h1 = HTMLbuilder.build('h1', {
+      innerText: 'Bienvenue sur HackOS',
+      style: 'color: #b2533f;',
     });
-    super.append(login);
+    const p = HTMLbuilder.build('p', {
+      innerText:
+        'Apprenez à vous prémunir contre les menaces liées à la cybersécurité!',
+    });
 
-    login.onclick = () => {
-      const login = new Login();
-      login.submit = (username, password) => {
-        login.delete();
-        console.log(username, password);
+    // Check if user is logged in
+    const isLoggedIn = this._isUserLoggedIn();
+
+    if (isLoggedIn) {
+      // Show logout button
+      const logout = HTMLbuilder.build('button', {
+        innerText: 'Se déconnecter',
+        style: 'background: #d9534f; color: white',
+      });
+      logout.onclick = async () => {
+        try {
+          // Send logout request to clear session on server
+          const response = await fetch('/logout', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          // After logout is confirmed, refresh the page
+          if (response.ok) {
+            location.reload();
+          } else {
+            location.reload();
+          }
+        } catch (err) {
+          console.error('Erreur lors de la déconnexion :', err);
+          // Still reload even if there's an error
+          location.reload();
+        }
       };
-    };
+
+      if (holderContent) {
+        holderContent.appendChild(h1);
+        holderContent.appendChild(p);
+        holderContent.appendChild(logout);
+      }
+    } else {
+      // Show login/register button
+      const login = HTMLbuilder.build('button', {
+        innerText: "Se connecter ou s'inscrire",
+        style: 'background: #3e9587; color: white',
+      });
+      login.onclick = () => {
+        const loginWindow = new Login();
+        loginWindow.submit = (username, password) => {
+          loginWindow.delete();
+          console.log(username, password);
+        };
+      };
+
+      if (holderContent) {
+        holderContent.appendChild(h1);
+        holderContent.appendChild(p);
+        holderContent.appendChild(login);
+      }
+    }
+  }
+
+  _getHolderContent() {
+    return (
+      document.querySelector('.window.Menu .holder > div') ||
+      document.querySelector('main > .windows .window:last-child .holder > div')
+    );
+  }
+
+  _isUserLoggedIn() {
+    // Check if user pseudo is displayed in nav (user is logged in)
+    const userPseudo = document.querySelector('#userPseudo');
+    return userPseudo && userPseudo.innerText !== 'Utilisateur';
   }
 }
 
@@ -210,7 +272,8 @@ class Login extends Window {
     });
 
     const errorMsg = HTMLbuilder.build('p', {
-      style: 'color: #ff6b6b; display: none; margin: 10px 0; padding: 8px; background: rgba(255, 107, 107, 0.1); border-radius: 4px; font-size: 0.9em; text-align: center; white-space: pre-line; border: 1px solid rgba(255, 107, 107, 0.3);',
+      style:
+        'color: #ff6b6b; display: none; margin: 10px 0; padding: 8px; background: rgba(255, 107, 107, 0.1); border-radius: 4px; font-size: 0.9em; text-align: center; white-space: pre-line; border: 1px solid rgba(255, 107, 107, 0.3);',
     });
 
     form.onsubmit = async (e) => {
@@ -231,10 +294,10 @@ class Login extends Window {
         if (!response.ok) {
           const text = await response.text();
           let errorMessage = '🚨 Erreur de connexion';
-          
+
           try {
             const errorData = JSON.parse(text);
-            
+
             // Nouvelle structure d'erreur avec validation
             if (errorData.errors && Array.isArray(errorData.errors)) {
               // Afficher la première erreur avec emoji
@@ -250,7 +313,7 @@ class Login extends Window {
             // Si ce n'est pas du JSON, utiliser le texte brut
             errorMessage = text || `🔌 Erreur serveur (${response.status})`;
           }
-          
+
           errorMsg.innerText = errorMessage;
           errorMsg.className = 'error-message';
           errorMsg.style.display = 'block';
@@ -259,22 +322,25 @@ class Login extends Window {
 
         const data = await response.json();
         if (data.success) {
-          this.delete();
+          this.delete(); // Fermer la fenêtre de login d'abord
+          this.loadProfile(); // Charger le profil
+
           if (window.Swal) {
             Swal.fire({
               icon: 'success',
               title: 'Connexion réussie',
-              text: 'Bienvenue sur Hackemon !',
-              confirmButtonColor: '#3085d6'
+              text: 'Bienvenue sur HackOS !',
+              confirmButtonColor: '#3085d6',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
             });
           } else {
             alert('✅ Connexion réussie !');
           }
-          this.loadProfile();
         } else {
           // Fallback pour d'autres formats d'erreur
           let errorMessage = '🚨 Erreur de connexion';
-          
+
           if (data.errors && Array.isArray(data.errors)) {
             errorMessage = data.errors[0].message;
           } else if (data.message) {
@@ -282,7 +348,7 @@ class Login extends Window {
           } else if (data.error) {
             errorMessage = data.error;
           }
-          
+
           errorMsg.innerText = errorMessage;
           errorMsg.className = 'error-message';
           errorMsg.style.display = 'block';
@@ -314,19 +380,30 @@ class Login extends Window {
 
   async loadProfile() {
     try {
-      const response = await fetch('/profile');
+      const response = await fetch('/profile', { credentials: 'same-origin' });
       if (!response.ok) throw new Error('Non autorisé');
 
-      const user = await response.json();
+      const data = await response.json();
+      const user = data.user || data;
       console.log('Utilisateur connecté :', user);
       if (window.Swal) {
         Swal.fire({
           icon: 'success',
           title: `Bienvenue, ${user.username} !`,
-          confirmButtonColor: '#3085d6'
+          confirmButtonColor: '#3085d6',
         });
       } else {
         alert(`Bienvenue, ${user.username} !`);
+      }
+
+      // Update user profile in nav
+      if (window.UserProfile) {
+        window.UserProfile.set(user);
+      }
+
+      // Refresh menu if it exists
+      if (window.globalMenuInstance && window.globalMenuInstance.render) {
+        window.globalMenuInstance.render();
       }
     } catch (err) {
       console.error('Erreur de récupération du profil :', err);
@@ -360,7 +437,8 @@ class Register extends Window {
     });
 
     const errorMsg = HTMLbuilder.build('p', {
-      style: 'color: #ff6b6b; display: none; margin: 10px 0; padding: 8px; background: rgba(255, 107, 107, 0.1); border-radius: 4px; font-size: 0.9em; text-align: center; white-space: pre-line; border: 1px solid rgba(255, 107, 107, 0.3);',
+      style:
+        'color: #ff6b6b; display: none; margin: 10px 0; padding: 8px; background: rgba(255, 107, 107, 0.1); border-radius: 4px; font-size: 0.9em; text-align: center; white-space: pre-line; border: 1px solid rgba(255, 107, 107, 0.3);',
     });
 
     form.onsubmit = async (e) => {
@@ -381,11 +459,11 @@ class Register extends Window {
         // Gestion améliorée des réponses d'erreur
         if (!response.ok) {
           const text = await response.text();
-          let errorMessage = '🚨 Erreur d\'inscription';
-          
+          let errorMessage = "🚨 Erreur d'inscription";
+
           try {
             const errorData = JSON.parse(text);
-            
+
             // Nouvelle structure d'erreur avec validation
             if (errorData.errors && Array.isArray(errorData.errors)) {
               // Afficher toutes les erreurs ou juste la première selon la préférence
@@ -393,7 +471,9 @@ class Register extends Window {
                 errorMessage = errorData.errors[0].message;
               } else {
                 // Afficher plusieurs erreurs de manière propre
-                errorMessage = errorData.errors.map(err => err.message).join('\n');
+                errorMessage = errorData.errors
+                  .map((err) => err.message)
+                  .join('\n');
               }
             } else if (errorData.message) {
               // Message d'erreur simple
@@ -406,7 +486,7 @@ class Register extends Window {
             // Si ce n'est pas du JSON, utiliser le texte brut
             errorMessage = text || `🔌 Erreur serveur (${response.status})`;
           }
-          
+
           errorMsg.innerText = errorMessage;
           errorMsg.className = 'error-message';
           errorMsg.style.display = 'block';
@@ -417,27 +497,29 @@ class Register extends Window {
         const data = await response.json();
         if (data.success) {
           this.delete();
-          alert('✅ Inscription réussie ! Vous pouvez maintenant vous connecter.');
+          alert(
+            '✅ Inscription réussie ! Vous pouvez maintenant vous connecter.'
+          );
           // Optionnel : ouvrir automatiquement la fenêtre de connexion
           new Login();
         } else {
           // Fallback pour d'autres formats d'erreur
-          let errorMessage = '🚨 Erreur d\'inscription';
-          
+          let errorMessage = "🚨 Erreur d'inscription";
+
           if (data.errors && Array.isArray(data.errors)) {
             if (data.errors.length === 1) {
               errorMessage = data.errors[0].message;
             } else {
-              errorMessage = data.errors.map(err => err.message).join('\n');
+              errorMessage = data.errors.map((err) => err.message).join('\n');
             }
           } else if (data.message) {
             errorMessage = data.message;
           } else if (data.error) {
             errorMessage = data.error;
           } else {
-            errorMessage = '🤔 Une erreur inattendue s\'est produite';
+            errorMessage = "🤔 Une erreur inattendue s'est produite";
           }
-          
+
           errorMsg.innerText = errorMessage;
           errorMsg.className = 'error-message';
           errorMsg.style.display = 'block';
@@ -505,21 +587,13 @@ class LoadingBar extends Window {
   }
 }
 
-document.body.onload = () => {
-  const menubtn = document.querySelector('#menubtn');
-  ondoubleclick(menubtn, () => {
-    const m = new Menu();
-  });
-};
-
 // drag and drop
-
 document.querySelectorAll('.apps .app').forEach((app) => {
-  app.draggable = true; // Assurez-vous que l'élément est bien draggable
+  app.draggable = true;
 
   app.addEventListener('dragstart', (e) => {
     app.classList.add('dragging');
-    e.dataTransfer.setData('text/plain', null); // Pour Firefox
+    e.dataTransfer.setData('text/plain', null);
   });
 
   app.addEventListener('dragend', () => {
@@ -529,18 +603,19 @@ document.querySelectorAll('.apps .app').forEach((app) => {
 
 const appsContainer = document.querySelector('.apps');
 
-appsContainer.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  const dragging = document.querySelector('.dragging');
-  const afterElement = getDragAfterElement(appsContainer, e.clientX);
-  if (afterElement == null) {
-    appsContainer.appendChild(dragging);
-  } else {
-    appsContainer.insertBefore(dragging, afterElement);
-  }
-});
+if (appsContainer) {
+  appsContainer.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const dragging = document.querySelector('.dragging');
+    const afterElement = getDragAfterElement(appsContainer, e.clientX);
+    if (afterElement == null) {
+      appsContainer.appendChild(dragging);
+    } else {
+      appsContainer.insertBefore(dragging, afterElement);
+    }
+  });
+}
 
-// Fonction magique : trouve l'élément le plus proche après la souris
 function getDragAfterElement(container, x) {
   const draggableElements = [
     ...container.querySelectorAll('.app:not(.dragging)'),
@@ -560,8 +635,7 @@ function getDragAfterElement(container, x) {
   ).element;
 }
 
-// Add a new app
-
+// Window drag handler
 document.querySelectorAll('.window').forEach((win) => {
   const topbar = win.querySelector('.topbar');
 
@@ -577,13 +651,8 @@ document.querySelectorAll('.window').forEach((win) => {
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
 
-    // Place le window tout en haut (z-index)
     win.style.zIndex = parseInt(Date.now() / 1000);
   });
-        const rect = win.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-    });
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
@@ -601,3 +670,15 @@ document.querySelectorAll('.window').forEach((win) => {
       win.classList.remove('dragging');
     }
   });
+});
+
+// Global reference to Menu instance for updates
+let globalMenuInstance = null;
+
+document.body.onload = () => {
+  const menubtn = document.querySelector('#menubtn');
+  ondoubleclick(menubtn, () => {
+    const m = new Menu();
+    globalMenuInstance = m;
+  });
+};
