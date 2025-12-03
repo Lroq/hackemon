@@ -260,7 +260,16 @@ class Login extends Window {
         const data = await response.json();
         if (data.success) {
           this.delete();
-          alert('✅ Connexion réussie !');
+          if (window.Swal) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Connexion réussie',
+              text: 'Bienvenue sur Hackemon !',
+              confirmButtonColor: '#3085d6'
+            });
+          } else {
+            alert('✅ Connexion réussie !');
+          }
           this.loadProfile();
         } else {
           // Fallback pour d'autres formats d'erreur
@@ -310,7 +319,15 @@ class Login extends Window {
 
       const user = await response.json();
       console.log('Utilisateur connecté :', user);
-      alert(`Bienvenue, ${user.username} !`);
+      if (window.Swal) {
+        Swal.fire({
+          icon: 'success',
+          title: `Bienvenue, ${user.username} !`,
+          confirmButtonColor: '#3085d6'
+        });
+      } else {
+        alert(`Bienvenue, ${user.username} !`);
+      }
     } catch (err) {
       console.error('Erreur de récupération du profil :', err);
     }

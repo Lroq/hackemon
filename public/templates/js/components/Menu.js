@@ -60,7 +60,16 @@ class Menu extends Window {
      */
     handleLoginSuccess(user) {
         console.log("Utilisateur connecté:", user);
-        alert(`Bienvenue, ${user.username || user.email} !`);
+        const pseudo = user.username || user.email;
+        if (window.Swal) {
+            Swal.fire({
+                icon: 'success',
+                title: `Bienvenue, ${pseudo} !`,
+                confirmButtonColor: '#3085d6'
+            });
+        } else {
+            alert(`Bienvenue, ${pseudo} !`);
+        }
         // Ici vous pouvez ajouter d'autres actions post-connexion
     }
 }

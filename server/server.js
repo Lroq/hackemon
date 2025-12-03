@@ -3,24 +3,15 @@ const mongoose = require("mongoose");
 const path = require("path");
 const session = require("express-session");
 
-const readEnvFile = require("./readfile");
-const envVariables = readEnvFile();
-
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-console.log(envVariables);
 
 // Initialisation de la connexion MongoDB via le module de config
 const DatabaseConfig = require("./config/database");
 
 (async () => {
   try {
-    if (envVariables.MONGO_URI) {
-      await DatabaseConfig.connect(envVariables.MONGO_URI);
-    } else {
-      await DatabaseConfig.connect();
-    }
+    await DatabaseConfig.connect();
   } catch (err) {
     console.error(
       "Erreur initialisation MongoDB:",
