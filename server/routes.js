@@ -8,7 +8,7 @@ const path = require('path');
 const AuthController = require('./controllers/AuthController');
 
 // Middleware
-const { requireAuth, logAuthAttempt } = require('./middleware/auth');
+const { requireAuth, optionalAuth, logAuthAttempt } = require('./middleware/auth');
 const { validateRegisterData, validateLoginData, sanitizeInput } = require('./middleware/validation');
 
 const router = express.Router();
@@ -24,7 +24,7 @@ router.post('/logout', AuthController.logout);
 
 // Routes protégées
 router.get('/profile', requireAuth, AuthController.getProfile);
-router.get('/session', AuthController.checkSession);
+router.get('/session', optionalAuth, AuthController.checkSession);
 
 // Route principale
 router.get('/', (req, res) => {

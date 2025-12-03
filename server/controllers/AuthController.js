@@ -2,6 +2,10 @@
  * Contrôleur pour la gestion de l'authentification (sans base de données)
  */
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'hackemon_jwt_secret';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 
 // Stockage en mémoire des utilisateurs (remplace la base de données)
 const users = new Map();
@@ -44,19 +48,21 @@ class AuthController {
                 });
             }
 
-            // Créer la session
-            req.session.userId = user.id;
+            const tokenPayload = {
+                userId: user.id,
+                username: user.username,
+                email: user.email
+            };
+
+            const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
             console.log("Connexion réussie pour:", user.username);
 
             res.json({ 
                 success: true, 
                 message: "Connexion réussie.",
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email
-                }
+                token,
+                user: tokenPayload
             });
 
         } catch (error) {
@@ -114,14 +120,19 @@ class AuthController {
 
             console.log("Inscription réussie pour:", username);
 
+            const tokenPayload = {
+                userId,
+                username: newUser.username,
+                email: newUser.email
+            };
+
+            const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
             res.status(201).json({ 
                 success: true,
-                message: "Inscription réussie. Vous pouvez maintenant vous connecter.",
-                user: {
-                    id: userId,
-                    username: newUser.username,
-                    email: newUser.email
-                }
+                message: "Inscription réussie.",
+                token,
+                user: tokenPayload
             });
 
         } catch (error) {
@@ -141,20 +152,9 @@ class AuthController {
      */
     static async logout(req, res) {
         try {
-            req.session.destroy((error) => {
-                if (error) {
-                    console.error("Erreur lors de la déconnexion:", error);
-                    return res.status(500).json({ 
-                        error: "Erreur lors de la déconnexion.", 
-                        code: "SERVER_ERROR" 
-                    });
-                }
-
-                res.clearCookie('connect.sid'); // Nom du cookie par défaut d'express-session
-                res.json({ 
-                    success: true, 
-                    message: "Déconnexion réussie." 
-                });
+            res.json({ 
+                success: true, 
+                message: "Déconnexion réussie. Supprimez votre token côté client." 
             });
         } catch (error) {
             console.error("Erreur lors de la déconnexion:", error);
@@ -172,7 +172,15 @@ class AuthController {
      */
     static async getProfile(req, res) {
         try {
-            const userData = users.get(req.session.userId);
+            const userId = req.user?.userId;
+            if (!userId) {
+                return res.status(401).json({ 
+                    error: "Accès non autorisé.", 
+                    code: "UNAUTHORIZED" 
+                });
+            }
+
+            const userData = users.get(userId);
             
             if (!userData) {
                 return res.status(404).json({ 
@@ -184,7 +192,7 @@ class AuthController {
             res.json({
                 success: true,
                 user: {
-                    id: req.session.userId,
+                    id: userId,
                     username: userData.username,
                     email: userData.email,
                     createdAt: userData.createdAt,
@@ -207,11 +215,11 @@ class AuthController {
      * @param {Object} res - Réponse Express
      */
     static checkSession(req, res) {
-        const isLoggedIn = !!req.session.userId;
-        
+        const isLoggedIn = !!req.user;
+
         res.json({
             isLoggedIn,
-            userId: req.session.userId || null
+            user: req.user || null
         });
     }
 }
