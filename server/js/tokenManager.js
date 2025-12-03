@@ -147,4 +147,3 @@ module.exports = {
     refreshAccessToken,
     revokeRefreshToken
 };
-
