@@ -145,20 +145,6 @@ const registerUser = async (userData) => {
                 code: "SERVER_ERROR"
             };
         }
-        return {
-            success: true,
-            message: "Inscription réussie. Vous pouvez maintenant vous connecter.",
-            user: {
-                UUID: userUUID,
-                username: newUser.username,
-                email: newUser.email,
-                level: newUser.level
-            },
-            tokens: {
-                accessToken,
-                refreshToken
-            }
-        };
 
     } catch (error) {
         console.error("Erreur lors de l'inscription:", error);
