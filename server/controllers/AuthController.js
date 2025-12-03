@@ -11,10 +11,6 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 const users = new Map();
 let userIdCounter = 1;
 
-// Synchroniser le stockage avec les modules
-setLoginUsersStorage(users);
-setRegisterUsersStorage(users, userIdCounter);
-
 class AuthController {
   /**
    * Gère la connexion utilisateur
