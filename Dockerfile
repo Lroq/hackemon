@@ -1,14 +1,20 @@
 FROM node:18-alpine
 
-WORKDIR /app
-
-ENV NODE_ENV=production
 ENV PORT=3000
 
+WORKDIR /app
+
+RUN apk update && apk add --no-cache git
+
+RUN git clone https://github.com/Lroq/Hackengine.git hackengine
+
+WORKDIR /app/hackengine
+RUN npm install --production
+
+WORKDIR /app
 COPY . .
+RUN npm install --production
 
 EXPOSE 3000
 
-CMD ["npm", "install", "--production"]
-
-CMD ["node", "server.js"]
+CMD sh -c "node server/server.js & npm start"

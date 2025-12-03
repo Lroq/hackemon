@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  hackemon:
+  app:
     build: .
     container_name: hackemon-app
     restart: unless-stopped
@@ -11,8 +9,6 @@ services:
       - mongo
     environment:
       - NODE_ENV=production
-      - PORT=3000
-      - MONGO_URL=mongodb://mongo:27017/hackemon
 
   mongo:
     image: mongo:6.0
