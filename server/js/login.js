@@ -5,8 +5,6 @@ const User = require('../models/User.js'); // Importe le modèle User
 const JWT_SECRET = process.env.JWT_SECRET || 'hackemon_jwt_secret';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 
-const router = express.Router();
-
 // Stockage en mémoire des utilisateurs (partagé avec AuthController)
 let users = new Map();
 
@@ -36,20 +34,42 @@ const loginUser = async (credentials) => {
         }
 
         // Chercher l'utilisateur dans la base MongoDB
-        const userDoc = await User.findOne({ email }).lean();
-
-        if (!userDoc) {
-            // Chercher l'utilisateur dans le fichier JSON
-            const user = findUserByEmail(email);
-
-        if (!user) {
-            return res.status(400).json({ error: "Email or password is incorrect." });
+        let user = null;
+        try {
+            const userDoc = await User.findOne({ email }).lean();
+            if (userDoc) {
+                user = userDoc;
+            }
+        } catch (mongoError) {
+            console.log("MongoDB non disponible, utilisation du stockage mémoire");
         }
 
-        // Verify the password
+        // Si pas trouvé dans MongoDB, chercher dans le stockage mémoire
+        if (!user) {
+            for (const [id, userData] of users.entries()) {
+                if (userData.email === email) {
+                    user = { ...userData, _id: id };
+                    break;
+                }
+            }
+        }
+
+        if (!user) {
+            return {
+                success: false,
+                error: "Email ou mot de passe incorrect.",
+                code: "INVALID_CREDENTIALS"
+            };
+        }
+
+        // Vérifier le mot de passe
         const match = await bcrypt.compare(password, user.hashpassword);
         if (!match) {
-            return res.status(400).json({ error: "Email or password is incorrect." });
+            return {
+                success: false,
+                error: "Email ou mot de passe incorrect.",
+                code: "INVALID_CREDENTIALS"
+            };
         }
 
         const tokenPayload = {
@@ -60,10 +80,19 @@ const loginUser = async (credentials) => {
 
         const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
-        res.json({ success: true, token, user: tokenPayload });
+        return { 
+            success: true, 
+            token, 
+            user: tokenPayload,
+            message: "Connexion réussie."
+        };
     } catch (err) {
         console.error("Error processing request:", err.message);
-        res.status(500).json({ error: "Error processing request." });
+        return {
+            success: false,
+            error: "Erreur serveur lors de la connexion.",
+            code: "SERVER_ERROR"
+        };
     }
 };
 

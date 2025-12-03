@@ -32,9 +32,6 @@ router.post("/logout", AuthController.logout);
 router.post("/refresh-token", AuthController.refreshToken);
 
 // Routes protégées (nécessitent un JWT valide)
-router.get("/profile", authenticateJWT, AuthController.getProfile);
-
-// Routes protégées
 router.get("/profile", requireAuth, AuthController.getProfile);
 router.get("/session", optionalAuth, AuthController.checkSession);
 

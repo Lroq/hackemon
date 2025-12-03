@@ -3,6 +3,8 @@
  */
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { loginUser, setUsersStorage } = require("../js/login");
+const { refreshAccessToken } = require("../js/tokenManager");
 
 const JWT_SECRET = process.env.JWT_SECRET || "hackemon_jwt_secret";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
@@ -10,6 +12,9 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 // Stockage en mémoire des utilisateurs (partagé avec les modules login et register)
 const users = new Map();
 let userIdCounter = 1;
+
+// Synchroniser le stockage avec le module de login
+setUsersStorage(users);
 
 class AuthController {
   /**
@@ -24,41 +29,20 @@ class AuthController {
 
       if (result.success) {
         // Réponse avec les tokens JWT
-        res.json({
+        return res.json({
           success: true,
           message: result.message,
           user: result.user,
-          tokens: result.tokens,
+          token: result.token,
+        });
+      } else {
+        const statusCode = result.code === "MISSING_FIELDS" ? 400 : 
+                          result.code === "INVALID_CREDENTIALS" ? 400 : 500;
+        return res.status(statusCode).json({
+          error: result.error,
+          code: result.code,
         });
       }
-
-      // Vérifier le mot de passe
-      const isPasswordValid = await bcrypt.compare(password, user.hashpassword);
-      if (!isPasswordValid) {
-        return res.status(400).json({
-          error: "Email ou mot de passe incorrect.",
-          code: "INVALID_CREDENTIALS",
-        });
-      }
-
-      const tokenPayload = {
-        userId: user.id,
-        username: user.username,
-        email: user.email,
-      };
-
-      const token = jwt.sign(tokenPayload, JWT_SECRET, {
-        expiresIn: JWT_EXPIRES_IN,
-      });
-
-      console.log("Connexion réussie pour:", user.username);
-
-      res.json({
-        success: true,
-        message: "Connexion réussie.",
-        token,
-        user: tokenPayload,
-      });
     } catch (error) {
       console.error("Erreur dans AuthController.login:", error);
       res.status(500).json({

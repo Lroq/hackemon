@@ -265,10 +265,10 @@ class Login extends Window {
               icon: 'success',
               title: 'Connexion réussie',
               text: 'Bienvenue sur Hackemon !',
-              confirmButtonColor: '#3085d6'
+              confirmButtonColor: '#3085d6',
+              timer: 3000,
+              showConfirmButton: false
             });
-          } else {
-            alert('✅ Connexion réussie !');
           }
           this.loadProfile();
         } else {
@@ -323,7 +323,9 @@ class Login extends Window {
         Swal.fire({
           icon: 'success',
           title: `Bienvenue, ${user.username} !`,
-          confirmButtonColor: '#3085d6'
+          confirmButtonColor: '#3085d6',
+          timer: 3000,
+          showConfirmButton: false
         });
       } else {
         alert(`Bienvenue, ${user.username} !`);
@@ -417,7 +419,16 @@ class Register extends Window {
         const data = await response.json();
         if (data.success) {
           this.delete();
-          alert('✅ Inscription réussie ! Vous pouvez maintenant vous connecter.');
+          if (window.Swal) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Inscription réussie',
+              text: 'Bienvenue sur Hackemon !',
+              confirmButtonColor: '#3085d6',
+              timer: 3000,
+              showConfirmButton: false
+            });
+          }
           // Optionnel : ouvrir automatiquement la fenêtre de connexion
           new Login();
         } else {
