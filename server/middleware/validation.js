@@ -39,16 +39,11 @@ const validateRegisterData = (req, res, next) => {
         errors.push("Format d'email invalide.");
     }
 
-    // Validation du mot de passe
-    if (password && password.length < 6) {
-        errors.push("Le mot de passe doit contenir au moins 6 caractères.");
-    }
-
     // Version plus stricte du mot de passe (optionnelle)
-    // const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{12,}/;
-    // if (password && !passwordRegex.test(password)) {
-    //     errors.push("Le mot de passe doit contenir au moins 12 caractères, un chiffre, une lettre majuscule, une lettre minuscule et un caractère spécial.");
-    // }
+     const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{12,}/;
+     if (password && !passwordRegex.test(password)) {
+        errors.push("Le mot de passe doit contenir au moins 12 caractères, un chiffre, une lettre majuscule, une lettre minuscule et un caractère spécial.");
+    }
 
     if (errors.length > 0) {
         return res.status(400).json({ 

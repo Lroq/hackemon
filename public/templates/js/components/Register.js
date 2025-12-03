@@ -3,8 +3,9 @@
  */
 class Register extends Window {
     constructor() {
-        super(20, 20, true, "S'inscrire");
+        super(20, 50, true, "S'inscrire"); // Hauteur, largeur, fermable, titre
         this.onLoginSuccess = null; // Callback pour redirection après inscription
+        this.expandedHeight = 37; // Hauteur avec texte d'erreur
         this.initializeRegister();
     }
 
@@ -24,7 +25,7 @@ class Register extends Window {
      */
     createRegisterForm() {
         const form = HTMLBuilder.build("form", {
-            style: "display:flex; width: 100%; height: 100%; overflow: hidden; flex-direction: column; justify-content: center"
+            style: "display:flex; width: 100%; max-height: 100%; overflow:auto; flex-direction: column; justify-content: center; z-index: 2; margin-top: 10px;"
         });
 
         // Champs du formulaire
@@ -44,7 +45,7 @@ class Register extends Window {
             type: "password",
             placeholder: "Mot de passe",
             required: true,
-            minLength: 6
+            minLength: 12
         });
 
         const submitButton = HTMLBuilder.build("input", {
@@ -54,7 +55,16 @@ class Register extends Window {
 
         // Message d'erreur
         const errorMsg = HTMLBuilder.build("p", {
-            style: "color: red; display: none;"
+            style: "color: red; display: none; min-height: 1.2em; margin-top: 5px; text-align: center;"
+        });
+
+        // Ajout des événements pour cacher l'erreur quand l'utilisateur tape
+        [emailInput, usernameInput, passwordInput].forEach(input => {
+            input.addEventListener('input', () => {
+                if (errorMsg.style.display === "block") {
+                    this.hideError(errorMsg);
+                }
+            });
         });
 
         // Gestionnaire de soumission
@@ -106,7 +116,7 @@ class Register extends Window {
      */
     async handleRegister(email, username, password, errorMsg) {
         try {
-            errorMsg.style.display = "none";
+            this.hideError(errorMsg);
 
             // Validation côté client
             if (!this.validateInputs(email, username, password, errorMsg)) {
@@ -144,8 +154,8 @@ class Register extends Window {
             return false;
         }
 
-        if (password.length < 6) {
-            this.showError(errorMsg, "Le mot de passe doit contenir au moins 6 caractères");
+        if (password.length < 12) {
+            this.showError(errorMsg, "Le mot de passe louis doit contenir au moins 6 caractères");
             return false;
         }
 
@@ -169,15 +179,23 @@ class Register extends Window {
     }
 
     /**
-     * Affiche un message d'erreur
+     * Affiche un message d'erreur et agrandit la fenêtre si nécessaire
      * @private
      * @param {HTMLElement} errorMsg - Élément pour afficher l'erreur
      * @param {string} message - Message d'erreur
      */
-    showError(errorMsg, message) {
-        errorMsg.innerText = message;
-        errorMsg.style.display = "block";
+    showError(errorMsg, message) { errorMsg.innerText = message; errorMsg.style.display = "block";
+    if (!this.isExpanded) { this.resize(this.expandedHeight, 50); this.isExpanded = true; }
     }
+
+
+    /**
+     * Cache le message d'erreur et restaure la taille originale
+     * @private
+     * @param {HTMLElement} errorMsg - Élément d'erreur à cacher
+     */
+    hideError(errorMsg) { errorMsg.style.display = "none";
+    if (this.isExpanded) { this.resize(this.originalHeight, 50); this.isExpanded = false; } }
 
     /**
      * Ouvre la fenêtre de connexion

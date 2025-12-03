@@ -1,51 +1,145 @@
-const express = require('express');
 const bcrypt = require('bcrypt');
-const User = require('../models/User.js'); // Importe le modèle User
+const fs = require('fs');
+const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
+const { 
+    readUsersFromFile, 
+    writeUsersToFile, 
+    findUserByEmail, 
+    addRefreshToken 
+} = require('../utils/userTokenManager');
 
-const router = express.Router();
+// Stockage en mémoire des utilisateurs (partagé avec AuthController)
+let users = new Map();
+let userIdCounter = 1;
 
-// Route d'inscription
-router.post("/", async (req, res) => {
-    console.log("Données d'inscription reçues :", req.body);
-    const { username, email, password } = req.body;
+// Fonction pour définir le stockage externe (appelée depuis AuthController)
+const setUsersStorage = (usersMap, counter) => {
+    users = usersMap;
+    userIdCounter = counter;
+};
 
-    if (!username || !email || !password) {
-        return res.status(400).json({ error: "Tous les champs sont requis." });
-    }
+// Fonction pour obtenir le compteur tuel
+const getUserIdCounter = () => userIdCounter;
 
+/**
+ * Logique d'inscription utilisateur
+ * @param {Object} userData - Les données de l'utilisateur {username, email, password}
+ * @returns {Object} - Résultat de l'inscription
+ */
+const registerUser = async (userData) => {
     try {
-        // Vérifier si l'utilisateur existe déjà
-        const existingUser = await User.findOne({ email });
+        const { username, email, password } = userData;
 
-        if (existingUser) {
-            return res.status(400).json({ error: "Un utilisateur avec cet email existe déjà." });
+        console.log("Tentative d'inscription pour:", email);
+
+        // Validation des champs requis
+        if (!username || !email || !password) {
+            return {
+                success: false,
+                error: "Tous les champs sont requis.",
+                code: "MISSING_FIELDS"
+            };
         }
 
         // Validation du mot de passe
         const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{12,}/;
         if (!passwordRegex.test(password)) {
-            return res.status(400).json({ error: "Le mot de passe doit contenir au moins 12 caractères, un chiffre, une lettre majuscule, une lettre minuscule et un caractère spécial." });
+            return {
+                success: false,
+                error: "Le mot de passe doit contenir au moins 12 caractères, un chiffre, une lettre majuscule, une lettre minuscule et un caractère spécial.",
+                code: "INVALID_PASSWORD"
+            };
+        }
+
+        // Vérifier si l'utilisateur existe déjà dans le fichier JSON
+        const existingData = readUsersFromFile();
+        const existingUserByEmail = findUserByEmail(email);
+        const existingUserByUsername = existingData.find(user => user.username === username);
+
+        if (existingUserByEmail || existingUserByUsername) {
+            const field = existingUserByEmail ? "email" : "nom d'utilisateur";
+            return {
+                success: false,
+                error: `Un utilisateur avec ce ${field} existe déjà.`,
+                code: "USER_EXISTS"
+            };
         }
 
         // Hasher le mot de passe
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        // Créer un nouvel utilisateur
-        console.log("Création d'un nouvel utilisateur avec les données :", { username, email, hashedPassword });
-
-        const newUser = new User({
+                // Générer les tokens JWT d'abord
+        const userUUID = require('uuid').v4();
+        const accessToken = generateAccessToken({
+            UUID: userUUID,
             username,
             email,
-            hashpassword: hashedPassword
+            level: 1
         });
 
-        await newUser.save();
+        const refreshToken = generateRefreshToken({
+            UUID: userUUID,
+            username
+        });
 
-        res.status(201).json({ message: "Inscription réussie." });
-    } catch (err) {
-        console.error("Erreur lors de l'inscription:", err.message);
-        res.status(500).json({ error: "Erreur serveur." });
+        // Créer le nouvel utilisateur avec UUID et tokens
+        const newUser = {
+            UUID: userUUID,
+            username,
+            email,
+            hashpassword: hashedPassword,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            tokens: [refreshToken], // Stockage du refresh token dans la DB
+            level: 1
+        };
+
+        // Sauvegarder dans le fichier JSON
+        const currentUsers = readUsersFromFile();
+        currentUsers.push(newUser);
+
+        // Écrire les données dans le fichier
+        const saveSuccess = writeUsersToFile(currentUsers);
+        if (!saveSuccess) {
+            return {
+                success: false,
+                error: "Erreur lors de la sauvegarde de l'utilisateur.",
+                code: "SAVE_ERROR"
+            };
+        }
+
+        users.set(userUUID, newUser);
+
+        console.log("Inscription réussie pour:", username);
+
+        return {
+            success: true,
+            message: "Inscription réussie. Vous pouvez maintenant vous connecter.",
+            user: {
+                UUID: userUUID,
+                username: newUser.username,
+                email: newUser.email,
+                level: newUser.level
+            },
+            tokens: {
+                accessToken,
+                refreshToken
+            }
+        };
+
+    } catch (error) {
+        console.error("Erreur lors de l'inscription:", error);
+        return {
+            success: false,
+            error: "Erreur serveur lors de l'inscription.",
+            code: "SERVER_ERROR"
+        };
     }
-});
+};
 
-module.exports = router;
+module.exports = {
+    registerUser,
+    setUsersStorage,
+    getUserIdCounter
+};
