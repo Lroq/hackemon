@@ -1,7 +1,8 @@
 /**
  * Classe de base pour toutes les fenêtres de l'application
  */
-class Window {
+if (!window.Window) {
+  window.Window = class Window {
     static States = {};
     static currentZIndex = 1;
     #window;
@@ -15,23 +16,23 @@ class Window {
      * @param {string} title
      */
     constructor(height, width, closeable, title = Math.random().toString()) {
-        // Évite la création de doublons
-        if (Window.States[title]) {
-            return;
-        }
+      // Évite la création de doublons
+      if (Window.States[title]) {
+        return;
+      }
 
-        this.#title = title;
-        Window.States[title] = true;
+      this.#title = title;
+      Window.States[title] = true;
 
-        this.#window = this.createWindow(height, width, closeable, title);
-        this.setupWindowDrag();
-        
-        // Assure que la nouvelle fenêtre apparaît devant toutes les autres
-        //Window.currentZIndex++;
-        this.#window.style.zIndex = Window.currentZIndex;
-        
-        document.body.querySelector("main > .windows").appendChild(this.#window);
-        HTMLBuilder.makeDraggable(this.#window);
+      this.#window = this.createWindow(height, width, closeable, title);
+      this.setupWindowDrag();
+
+      // Assure que la nouvelle fenêtre apparaît devant toutes les autres
+      //Window.currentZIndex++;
+      this.#window.style.zIndex = Window.currentZIndex;
+
+      document.body.querySelector('main > .windows').appendChild(this.#window);
+      HTMLBuilder.makeDraggable(this.#window);
     }
 
     /**
@@ -39,19 +40,19 @@ class Window {
      * @private
      */
     createWindow(height, width, closeable, title) {
-        const windowElement = HTMLBuilder.build("div", {
-            className: `window ${closeable ? "closeable" : ""}`,
-            style: `height: ${height}vw; width: ${width}vw;`
-        });
+      const windowElement = HTMLBuilder.build('div', {
+        className: `window ${closeable ? 'closeable' : ''}`,
+        style: `height: ${height}vw; width: ${width}vw;`,
+      });
 
-        // Création de la barre de titre
-        const topBar = this.createTopBar(title, closeable);
-        const content = this.createContent();
+      // Création de la barre de titre
+      const topBar = this.createTopBar(title, closeable);
+      const content = this.createContent();
 
-        windowElement.appendChild(topBar);
-        windowElement.appendChild(content);
+      windowElement.appendChild(topBar);
+      windowElement.appendChild(content);
 
-        return windowElement;
+      return windowElement;
     }
 
     /**
@@ -59,26 +60,38 @@ class Window {
      * @private
      */
     createTopBar(title, closeable) {
-        const topBar = HTMLBuilder.build("div", { className: "topbar" });
-        
-        topBar.appendChild(HTMLBuilder.build("img", { src: "/public/assets/left_bar_px.png" }));
-        topBar.appendChild(HTMLBuilder.build("img", { className: "mid", src: "/public/assets/mid_bar_px.png" }));
-        topBar.appendChild(HTMLBuilder.build("img", { src: "/public/assets/right_bar_px.png" }));
+      const topBar = HTMLBuilder.build('div', { className: 'topbar' });
 
-        const label = HTMLBuilder.build("label", { className: "app-name", innerText: title });
-        topBar.appendChild(label);
+      topBar.appendChild(
+        HTMLBuilder.build('img', { src: '/public/assets/left_bar_px.png' })
+      );
+      topBar.appendChild(
+        HTMLBuilder.build('img', {
+          className: 'mid',
+          src: '/public/assets/mid_bar_px.png',
+        })
+      );
+      topBar.appendChild(
+        HTMLBuilder.build('img', { src: '/public/assets/right_bar_px.png' })
+      );
 
-        if (closeable) {
-            const closeButton = HTMLBuilder.build("img", {
-                className: "app-close",
-                src: "/public/assets/close_px.png",
-                draggable: false
-            });
-            closeButton.addEventListener('click', () => this.delete());
-            topBar.appendChild(closeButton);
-        }
+      const label = HTMLBuilder.build('label', {
+        className: 'app-name',
+        innerText: title,
+      });
+      topBar.appendChild(label);
 
-        return topBar;
+      if (closeable) {
+        const closeButton = HTMLBuilder.build('img', {
+          className: 'app-close',
+          src: '/public/assets/close_px.png',
+          draggable: false,
+        });
+        closeButton.addEventListener('click', () => this.delete());
+        topBar.appendChild(closeButton);
+      }
+
+      return topBar;
     }
 
     /**
@@ -86,25 +99,41 @@ class Window {
      * @private
      */
     createContent() {
-        const content = HTMLBuilder.build("div", { className: "content" });
+      const content = HTMLBuilder.build('div', { className: 'content' });
 
-        const leftSection = HTMLBuilder.build("div", {});
-        leftSection.appendChild(HTMLBuilder.build("img", { src: "/public/assets/left_content_px.png" }));
-        leftSection.appendChild(HTMLBuilder.build("img", { src: "/public/assets/left_content_bottom_px.png" }));
+      const leftSection = HTMLBuilder.build('div', {});
+      leftSection.appendChild(
+        HTMLBuilder.build('img', { src: '/public/assets/left_content_px.png' })
+      );
+      leftSection.appendChild(
+        HTMLBuilder.build('img', {
+          src: '/public/assets/left_content_bottom_px.png',
+        })
+      );
 
-        const holder = HTMLBuilder.build("div", { className: "holder" });
-        holder.appendChild(HTMLBuilder.build("div", {}));
-        holder.appendChild(HTMLBuilder.build("img", { src: "/public/assets/mid_content_bottom_px.png" }));
+      const holder = HTMLBuilder.build('div', { className: 'holder' });
+      holder.appendChild(HTMLBuilder.build('div', {}));
+      holder.appendChild(
+        HTMLBuilder.build('img', {
+          src: '/public/assets/mid_content_bottom_px.png',
+        })
+      );
 
-        const rightSection = HTMLBuilder.build("div", {});
-        rightSection.appendChild(HTMLBuilder.build("img", { src: "/public/assets/right_content_px.png" }));
-        rightSection.appendChild(HTMLBuilder.build("img", { src: "/public/assets/right_content_bottom_px.png" }));
+      const rightSection = HTMLBuilder.build('div', {});
+      rightSection.appendChild(
+        HTMLBuilder.build('img', { src: '/public/assets/right_content_px.png' })
+      );
+      rightSection.appendChild(
+        HTMLBuilder.build('img', {
+          src: '/public/assets/right_content_bottom_px.png',
+        })
+      );
 
-        content.appendChild(leftSection);
-        content.appendChild(holder);
-        content.appendChild(rightSection);
+      content.appendChild(leftSection);
+      content.appendChild(holder);
+      content.appendChild(rightSection);
 
-        return content;
+      return content;
     }
 
     /**
@@ -112,57 +141,57 @@ class Window {
      * @private
      */
     setupWindowDrag() {
-        const topbar = this.#window.querySelector('.topbar');
-        let isDragging = false;
-        let offsetX = 0;
-        let offsetY = 0;
+      const topbar = this.#window.querySelector('.topbar');
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
 
-        topbar.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            this.#window.classList.add('dragging');
+      topbar.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        this.#window.classList.add('dragging');
 
-            const rect = this.#window.getBoundingClientRect();
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
+        const rect = this.#window.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
 
-            // Amène la fenêtre au premier plan quand on clique dessus
-            Window.currentZIndex++;
-            this.#window.style.zIndex = Window.currentZIndex;
-        });
+        // Amène la fenêtre au premier plan quand on clique dessus
+        Window.currentZIndex++;
+        this.#window.style.zIndex = Window.currentZIndex;
+      });
 
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
 
-            const x = e.clientX - offsetX;
-            const y = e.clientY - offsetY;
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
 
-            this.#window.style.left = `${x}px`;
-            this.#window.style.top = `${y}px`;
-        });
+        this.#window.style.left = `${x}px`;
+        this.#window.style.top = `${y}px`;
+      });
 
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                this.#window.classList.remove('dragging');
-            }
-        });
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          this.#window.classList.remove('dragging');
+        }
+      });
 
-        // Amène la fenêtre au premier plan quand on clique dessus (pas seulement sur la barre de titre)
-        this.#window.addEventListener('mousedown', (e) => {
-            // Évite le conflit avec le drag de la barre de titre
-            if (!e.target.closest('.topbar')) {
-                Window.currentZIndex++;
-                this.#window.style.zIndex = Window.currentZIndex;
-            }
-        });
+      // Amène la fenêtre au premier plan quand on clique dessus (pas seulement sur la barre de titre)
+      this.#window.addEventListener('mousedown', (e) => {
+        // Évite le conflit avec le drag de la barre de titre
+        if (!e.target.closest('.topbar')) {
+          Window.currentZIndex++;
+          this.#window.style.zIndex = Window.currentZIndex;
+        }
+      });
     }
 
     /**
      * Supprime la fenêtre
      */
     delete() {
-        Window.States[this.#title] = false;
-        this.#window.remove();
+      Window.States[this.#title] = false;
+      this.#window.remove();
     }
 
     /**
@@ -171,8 +200,8 @@ class Window {
      * @param {number} width - Nouvelle largeur
      */
     resize(height, width) {
-        this.#window.style.height = `${height}vw`;
-        this.#window.style.width = `${width}vw`;
+      this.#window.style.height = `${height}vw`;
+      this.#window.style.width = `${width}vw`;
     }
 
     /**
@@ -180,10 +209,10 @@ class Window {
      * @param {string} name - Nouveau nom
      */
     rename(name) {
-        const label = this.#window.querySelector(".topbar .app-name");
-        if (label) {
-            label.innerText = name;
-        }
+      const label = this.#window.querySelector('.topbar .app-name');
+      if (label) {
+        label.innerText = name;
+      }
     }
 
     /**
@@ -191,7 +220,7 @@ class Window {
      * @param {HTMLElement} element - Élément à ajouter
      */
     append(element) {
-        this.#window.querySelector(".holder > div").appendChild(element);
+      this.#window.querySelector('.holder > div').appendChild(element);
     }
 
     /**
@@ -199,9 +228,7 @@ class Window {
      * @returns {HTMLElement} L'élément de la fenêtre
      */
     getElement() {
-        return this.#window;
+      return this.#window;
     }
+  };
 }
-
-// Export pour utilisation globale
-window.Window = Window;

@@ -34,14 +34,14 @@ function ondoubleclick(element, func) {
   let lastClick = Date.now();
   const threshold = 200;
 
-  element.onclick = () => {
+  element.addEventListener('click', (e) => {
     if (Date.now() - lastClick < threshold) {
       func();
       lastClick = Date.now() - threshold;
     } else {
       lastClick = Date.now();
     }
-  };
+  });
 }
 
 class Window {
@@ -687,6 +687,7 @@ document.querySelectorAll('.window').forEach((win) => {
 
 // Global reference to Menu instance for updates
 let globalMenuInstance = null;
+let globalCorbeilleInstance = null;
 
 document.body.onload = () => {
   // Create the initial Menu instance on page load
@@ -699,4 +700,17 @@ document.body.onload = () => {
       const m = new Menu();
     }
   });
+
+  const binbtn = document.querySelector('#bin');
+  ondoubleclick(binbtn, () => {
+    // Toggle Corbeille visibility or create a new one if deleted
+    if (!globalCorbeilleInstance) {
+      const c = new Corbeille();
+    }
+  });
+
+  // Initialize bin drag and drop system
+  if (typeof window.initializeBinDragAndDrop === 'function') {
+    window.initializeBinDragAndDrop();
+  }
 };

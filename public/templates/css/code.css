@@ -1,29 +1,50 @@
 @font-face {
-    font-family: 'VT323';
-    src: url('/public/templates/font/VT323.ttf');
+  font-family: 'VT323';
+  src: url('/public/templates/font/VT323.ttf');
 }
 
-
 :root {
-    --haxor-green: #ff2929;
-    --haxor-green2: rgb(202, 54, 54);
-    --black: rgb(0, 0, 0);
-    --font-main: "VT323"
+  --haxor-green: #ff2929;
+  --haxor-green2: rgb(202, 54, 54);
+  --black: rgb(0, 0, 0);
+  --font-main: 'VT323';
 }
 
 body {
-    background-color: #9EDBFF;
-    overflow: hidden;
+  background-color: #9edbff;
+  overflow: hidden;
 }
 
 * {
-    margin: 0;
-    padding: 0;
-    font-family: 'VT323';
-    font-size: 1vw;
-    user-select: none;
-    image-rendering: pixelated;
-    pointer-events: none;
-    color: black;
-    font-weight: lighter;
+  margin: 0;
+  padding: 0;
+  font-family: 'VT323';
+  font-size: 1vw;
+  user-select: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+  color: black;
+  font-weight: lighter;
+}
+
+/* Permettre les interactions pour les apps draggables */
+.apps > a {
+  pointer-events: auto !important;
+}
+
+.app {
+  pointer-events: auto !important;
+  user-select: auto !important; /* CRITIQUE: permet le drag HTML5 */
+  -webkit-user-select: auto !important;
+  -webkit-user-drag: element;
+  cursor: grab;
+}
+
+.app * {
+  pointer-events: none !important;
+  user-select: none !important; /* Les enfants restent non-sélectionnables */
+}
+
+.app.dragging {
+  cursor: grabbing;
 }

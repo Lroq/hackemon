@@ -16,6 +16,7 @@ const AppConfig = {
     components: [
       '/public/templates/js/components/Window.js',
       '/public/templates/js/components/Menu.js',
+      '/public/templates/js/components/Corbeille.js',
       '/public/templates/js/components/Login.js',
       '/public/templates/js/components/Register.js',
       '/public/templates/js/components/LoadingBar.js',

@@ -1,10 +1,11 @@
 /**
  * Composant Menu principal de l'application
  */
-class Menu extends Window {
+if (!window.Menu) {
+  window.Menu = class Menu extends Window {
     constructor() {
-        super(50, 50, true, "Menu");
-        this.initializeMenu();
+      super(50, 50, true, 'Menu');
+      this.initializeMenu();
     }
 
     /**
@@ -12,32 +13,33 @@ class Menu extends Window {
      * @private
      */
     initializeMenu() {
-        // Titre de bienvenue
-        const title = HTMLBuilder.build("h1", {
-            innerText: "Bienvenue sur HackOS",
-            style: "color: #b2533f;"
-        });
+      // Titre de bienvenue
+      const title = HTMLBuilder.build('h1', {
+        innerText: 'Bienvenue sur HackOS',
+        style: 'color: #b2533f;',
+      });
 
-        // Description
-        const description = HTMLBuilder.build("p", {
-            innerText: "Apprenez à vous prémunir contre les menaces liées à la cybersécurité!"
-        });
+      // Description
+      const description = HTMLBuilder.build('p', {
+        innerText:
+          'Apprenez à vous prémunir contre les menaces liées à la cybersécurité!',
+      });
 
-        // Bouton de connexion
-        const loginButton = HTMLBuilder.build("button", {
-            innerText: "Se connecter ou s'inscrire",
-            style: "background: #3e9587; color: white"
-        });
+      // Bouton de connexion
+      const loginButton = HTMLBuilder.build('button', {
+        innerText: "Se connecter ou s'inscrire",
+        style: 'background: #3e9587; color: white',
+      });
 
-        // Gestionnaire d'événement pour le bouton de connexion
-        loginButton.onclick = () => {
-            this.openLogin();
-        };
+      // Gestionnaire d'événement pour le bouton de connexion
+      loginButton.onclick = () => {
+        this.openLogin();
+      };
 
-        // Ajout des éléments au menu
-        this.append(title);
-        this.append(description);
-        this.append(loginButton);
+      // Ajout des éléments au menu
+      this.append(title);
+      this.append(description);
+      this.append(loginButton);
     }
 
     /**
@@ -45,12 +47,12 @@ class Menu extends Window {
      * @private
      */
     openLogin() {
-        const loginWindow = new Login();
-        
-        // Callback pour la soumission réussie
-        loginWindow.onLoginSuccess = (user) => {
-            this.handleLoginSuccess(user);
-        };
+      const loginWindow = new Login();
+
+      // Callback pour la soumission réussie
+      loginWindow.onLoginSuccess = (user) => {
+        this.handleLoginSuccess(user);
+      };
     }
 
     /**
@@ -59,20 +61,18 @@ class Menu extends Window {
      * @private
      */
     handleLoginSuccess(user) {
-        console.log("Utilisateur connecté:", user);
-        const pseudo = user.username || user.email;
-        if (window.Swal) {
-            Swal.fire({
-                icon: 'success',
-                title: `Bienvenue, ${pseudo} !`,
-                confirmButtonColor: '#3085d6'
-            });
-        } else {
-            alert(`Bienvenue, ${pseudo} !`);
-        }
-        // Ici vous pouvez ajouter d'autres actions post-connexion
+      console.log('Utilisateur connecté:', user);
+      const pseudo = user.username || user.email;
+      if (window.Swal) {
+        Swal.fire({
+          icon: 'success',
+          title: `Bienvenue, ${pseudo} !`,
+          confirmButtonColor: '#3085d6',
+        });
+      } else {
+        alert(`Bienvenue, ${pseudo} !`);
+      }
+      // Ici vous pouvez ajouter d'autres actions post-connexion
     }
+  };
 }
-
-// Export pour utilisation globale
-window.Menu = Menu;
