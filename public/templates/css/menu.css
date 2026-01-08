@@ -129,12 +129,23 @@ main {
 
 /* Barre d'applications */
 .apps {
-  display: flex;
-  justify-content: left;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8vw, 1fr));
+  grid-auto-rows: 8vw;
+  gap: 0.6vw;
+  justify-items: start;
+  align-items: start;
   padding: 0.5vw;
   position: relative;
 
+  > a {
+    display: block;
+    text-decoration: none;
+  }
+
   .app {
+    width: 100%;
+    height: 100%;
     padding: 0.4vw;
     pointer-events: all;
     display: flex;
@@ -143,6 +154,8 @@ main {
     justify-content: center;
     gap: 0.2vw;
     border: 0.1vw solid rgba(255, 255, 255, 0);
+    user-select: none;
+    box-sizing: border-box;
 
     > label {
       color: white;
@@ -174,15 +187,51 @@ main > nav {
 
 /* Dragging */
 .app.dragging,
-.window.dragging {
+.apps > a.dragging {
+  z-index: 10;
+  opacity: 0.9;
+  cursor: grabbing;
+}
+
+.apps.debug-grid {
+  background-image: linear-gradient(
+      rgba(255, 255, 255, 0.2) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.2) 1px,
+      transparent 1px
+    );
+  background-size: var(--grid-cell-width, 8vw) var(--grid-cell-height, 8vw);
+  background-position: var(--grid-offset-x, 0px) var(--grid-offset-y, 0px);
+  min-height: 70vh;
+}
+
+.apps.debug-grid > a,
+.apps.debug-grid > .app {
+  position: relative;
+  outline: 1px dashed rgba(255, 255, 255, 0.35);
+}
+
+.apps.debug-grid > a::after,
+.apps.debug-grid > .app::after {
+  content: attr(data-grid-row) " / " attr(data-grid-col);
   position: absolute;
-  z-index: 1000;
-  opacity: 0.8;
-  pointer-events: all;
+  top: 0.15vw;
+  right: 0.4vw;
+  font-size: 0.8vw;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.15vw 0.3vw;
+  border-radius: 0.2vw;
 }
 
 .window.dragging {
+  position: absolute;
+  z-index: 1000;
   opacity: 0.9;
+  pointer-events: all;
   cursor: grabbing;
 }
 
