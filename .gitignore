@@ -1,0 +1,14 @@
+.idea
+node_modules
+TODO
+.DS_Store
+dist
+.env
+.vscode
+*.log
+coverage
+*.tmp
+*.bak
+.cache
+*.swp
+package-lock.json
