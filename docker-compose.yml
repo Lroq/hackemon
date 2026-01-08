@@ -11,6 +11,9 @@ services:
       - mongo
     environment:
       MONGO_URI: mongodb://mongo:27017/hackemon
+    volumes:
+      - ./:/app
+      - /app/node_modules
 
   jeu:
     build:
