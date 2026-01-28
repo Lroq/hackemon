@@ -1,11 +1,14 @@
-/**
- * Classe de base pour toutes les fenêtres de l'application
- */
-class Window {
-    static States = {};
-    static currentZIndex = 1;
-    #window;
-    #title;
+if (window.Window && window.Window.__hackos) {
+    // Déjà défini par HackOS: on ignore sans bruit.
+} else {
+    /**
+     * Classe de base pour toutes les fenêtres de l'application
+     */
+    class Window {
+        static States = {};
+        static currentZIndex = 1;
+        #window;
+        #title;
 
     /**
      * Constructeur de la classe Window
@@ -201,7 +204,9 @@ class Window {
     getElement() {
         return this.#window;
     }
-}
+    }
 
-// Export pour utilisation globale
-window.Window = Window;
+    // Export pour utilisation globale
+    Window.__hackos = true;
+    window.Window = Window;
+}

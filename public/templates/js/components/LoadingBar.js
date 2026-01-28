@@ -1,11 +1,14 @@
-/**
- * Composant pour afficher une barre de progression
- */
-class LoadingBar extends Window {
-    constructor(title) {
-        super(10, 20, false, title);
-        this.initializeLoadingBar();
-    }
+if (window.LoadingBar && window.LoadingBar.__hackos) {
+    // Déjà défini par HackOS: on ignore sans bruit.
+} else {
+    /**
+     * Composant pour afficher une barre de progression
+     */
+    class LoadingBar extends Window {
+        constructor(title) {
+            super(10, 20, false, title);
+            this.initializeLoadingBar();
+        }
 
     /**
      * Initialise la barre de progression
@@ -70,7 +73,9 @@ class LoadingBar extends Window {
     setOnLoaded(callback) {
         this.onLoaded = callback;
     }
-}
+    }
 
-// Export pour utilisation globale
-window.LoadingBar = LoadingBar;
+    // Export pour utilisation globale
+    LoadingBar.__hackos = true;
+    window.LoadingBar = LoadingBar;
+}

@@ -1,11 +1,14 @@
-/**
- * Composant Menu principal de l'application
- */
-class Menu extends Window {
-    constructor() {
-        super(50, 50, true, "Menu");
-        this.initializeMenu();
-    }
+if (window.Menu && window.Menu.__hackos) {
+    // Déjà défini par HackOS: on ignore sans bruit.
+} else {
+    /**
+     * Composant Menu principal de l'application
+     */
+    class Menu extends Window {
+        constructor() {
+            super(50, 50, true, "Menu");
+            this.initializeMenu();
+        }
 
     /**
      * Initialise le contenu du menu
@@ -72,7 +75,9 @@ class Menu extends Window {
         }
         // Ici vous pouvez ajouter d'autres actions post-connexion
     }
-}
+    }
 
-// Export pour utilisation globale
-window.Menu = Menu;
+    // Export pour utilisation globale
+    Menu.__hackos = true;
+    window.Menu = Menu;
+}

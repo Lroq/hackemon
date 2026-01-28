@@ -1,13 +1,16 @@
-/**
- * Composant pour la fenêtre d'inscription
- */
-class Register extends Window {
-  constructor() {
-    super(20, 50, true, "S'inscrire"); // Hauteur, largeur, fermable, titre
-    this.onLoginSuccess = null; // Callback pour redirection après inscription
-    this.expandedHeight = 37; // Hauteur avec texte d'erreur
-    this.initializeRegister();
-  }
+if (window.Register && window.Register.__hackos) {
+  // Déjà défini par HackOS: on ignore sans bruit.
+} else {
+  /**
+   * Composant pour la fenêtre d'inscription
+   */
+  class Register extends Window {
+    constructor() {
+      super(20, 50, true, "S'inscrire"); // Hauteur, largeur, fermable, titre
+      this.onLoginSuccess = null; // Callback pour redirection après inscription
+      this.expandedHeight = 37; // Hauteur avec texte d'erreur
+      this.initializeRegister();
+    }
 
   /**
    * Initialise le formulaire d'inscription
@@ -263,6 +266,8 @@ class Register extends Window {
     // Transférer le callback de succès si nécessaire
     loginWindow.onLoginSuccess = this.onLoginSuccess;
   }
-}
+  }
 
-window.Register = Register;
+  Register.__hackos = true;
+  window.Register = Register;
+}

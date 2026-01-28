@@ -1,14 +1,17 @@
-/**
- * Classe Login - Formulaire de connexion sécurisé
- */
-class Login extends Window {
-  constructor() {
-    super(20, 50, true, 'Se connecter');
-    this.onLoginSuccess = null; // Callback pour le succès de connexion
-    this.failedAttempts = 0;
-    this.lockoutEndTime = null;
-    this.initializeLogin();
-  }
+if (window.Login && window.Login.__hackos) {
+  // Déjà défini par HackOS: on ignore sans bruit.
+} else {
+  /**
+   * Classe Login - Formulaire de connexion sécurisé
+   */
+  class Login extends Window {
+    constructor() {
+      super(20, 50, true, 'Se connecter');
+      this.onLoginSuccess = null; // Callback pour le succès de connexion
+      this.failedAttempts = 0;
+      this.lockoutEndTime = null;
+      this.initializeLogin();
+    }
 
   /**
    * Initialise le formulaire de connexion
@@ -603,7 +606,9 @@ class Login extends Window {
     alert("Fonctionnalité 'Mot de passe oublié' à venir");
     // Exemple: new ForgotPassword();
   }
-}
+  }
 
-// Export pour utilisation globale
-window.Login = Login;
+  // Export pour utilisation globale
+  Login.__hackos = true;
+  window.Login = Login;
+}

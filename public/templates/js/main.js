@@ -44,10 +44,11 @@ function ondoubleclick(element, func) {
   };
 }
 
-class Window {
-  static States = {};
-  #Window;
-  #Title;
+if (!window.Window || !window.Window.__hackos) {
+  class Window {
+    static States = {};
+    #Window;
+    #Title;
 
   constructor(height, width, closeable, title = Math.random().toString()) {
     if (Window.States[title]) {
@@ -153,15 +154,20 @@ class Window {
   append(element) {
     this.#Window.querySelector('.holder > div').appendChild(element);
   }
+  }
+
+  Window.__hackos = true;
+  window.Window = Window;
 }
 
-class Menu extends Window {
-  constructor() {
-    super(30, 50, true, 'Menu');
-    // Store reference to this Menu instance globally so it can be updated
-    window.globalMenuInstance = this;
-    this.render();
-  }
+if (!window.Menu || !window.Menu.__hackos) {
+  class Menu extends Window {
+    constructor() {
+      super(30, 50, true, 'Menu');
+      // Store reference to this Menu instance globally so it can be updated
+      window.globalMenuInstance = this;
+      this.render();
+    }
 
   render() {
     // Clear content
@@ -246,15 +252,20 @@ class Menu extends Window {
     const userPseudo = document.querySelector('#userPseudo');
     return userPseudo && userPseudo.innerText !== 'Visiteur';
   }
+  }
+
+  Menu.__hackos = true;
+  window.Menu = Menu;
 }
 
-class Login extends Window {
-  constructor() {
-    super(25, 20, true, 'Se connecter');
-    const form = HTMLbuilder.build('form', {
-      style:
-        'display:flex; width: 100%; height: 100%; overflow: hidden; flex-direction: column; justify-content: center',
-    });
+if (!window.Login || !window.Login.__hackos) {
+  class Login extends Window {
+    constructor() {
+      super(25, 20, true, 'Se connecter');
+      const form = HTMLbuilder.build('form', {
+        style:
+          'display:flex; width: 100%; height: 100%; overflow: hidden; flex-direction: column; justify-content: center',
+      });
 
     const username = HTMLbuilder.build('input', {
       type: 'text',
@@ -388,15 +399,20 @@ class Login extends Window {
       console.error('Erreur de récupération du profil :', err);
     }
   }
+  }
+
+  Login.__hackos = true;
+  window.Login = Login;
 }
 
-class Register extends Window {
-  constructor() {
-    super(30, 20, true, "S'inscrire");
-    const form = HTMLbuilder.build('form', {
-      style:
-        'display:flex; width: 100%; height: 100%; overflow: hidden; flex-direction: column; justify-content: center',
-    });
+if (!window.Register || !window.Register.__hackos) {
+  class Register extends Window {
+    constructor() {
+      super(30, 20, true, "S'inscrire");
+      const form = HTMLbuilder.build('form', {
+        style:
+          'display:flex; width: 100%; height: 100%; overflow: hidden; flex-direction: column; justify-content: center',
+      });
 
     const mail = HTMLbuilder.build('input', {
       type: 'text',
@@ -559,11 +575,16 @@ class Register extends Window {
     );
     super.append(form);
   }
+  }
+
+  Register.__hackos = true;
+  window.Register = Register;
 }
 
-class LoadingBar extends Window {
-  constructor(Title) {
-    super(10, 20, false, Title);
+if (!window.LoadingBar || !window.LoadingBar.__hackos) {
+  class LoadingBar extends Window {
+    constructor(Title) {
+      super(10, 20, false, Title);
 
     const wrapper = HTMLbuilder.build('div', {
       style:
@@ -598,6 +619,10 @@ class LoadingBar extends Window {
   loaded() {
     throw new Error('No loaded handler');
   }
+  }
+
+  LoadingBar.__hackos = true;
+  window.LoadingBar = LoadingBar;
 }
 
 // drag and drop
