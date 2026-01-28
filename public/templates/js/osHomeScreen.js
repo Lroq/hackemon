@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
   if (apps[1].id === "gamehkenginebtn") {
     apps[1].addEventListener("dblclick", async () => {
       // Vérifier le rôle de l'utilisateur
-      const accessToken = localStorage.getItem('accessToken');
+      const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('auth_token');
       
       console.log('Token récupéré:', accessToken ? 'OUI' : 'NON');
       
