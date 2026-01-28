@@ -1,6 +1,12 @@
 document.addEventListener("DOMContentLoaded", (e) => {
   const apps = document.querySelectorAll(".app");
 
+  if (apps[1].id === "gamehkenginebtn") {
+    apps[1].addEventListener("dblclick", () => {
+      window.location.href = "http://localhost:3001";
+    });
+  }
+
   for (const app of apps) {
     let offsetX = 0;
     let offsetY = 0;
