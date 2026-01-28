@@ -1,5 +1,9 @@
-document.addEventListener("DOMContentLoaded", (e) => {
-  const apps = document.querySelectorAll(".app");
+document.addEventListener('DOMContentLoaded', (e) => {
+  const apps = document.querySelectorAll('.app');
+
+  apps[1].addEventListener('dblclick', () => {
+    window.open('http://localhost:3001');
+  });
 
   for (const app of apps) {
     let offsetX = 0;
@@ -18,21 +22,21 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
         if (!isDragging) {
           isDragging = true;
-          app.style.position = "absolute";
+          app.style.position = 'absolute';
           app.style.zIndex = 0;
 
-          app.style.left = e.clientX - offsetX + "px";
-          app.style.top = e.clientY - offsetY + "px";
+          app.style.left = e.clientX - offsetX + 'px';
+          app.style.top = e.clientY - offsetY + 'px';
         } else {
-          app.style.left = e.clientX - offsetX + "px";
-          app.style.top = e.clientY - offsetY + "px";
+          app.style.left = e.clientX - offsetX + 'px';
+          app.style.top = e.clientY - offsetY + 'px';
         }
       }
     }
 
     function onMouseUp(e) {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
 
       if (hasMoved) {
         setTimeout(() => {
@@ -45,7 +49,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
       hasMoved = false;
     }
 
-    app.addEventListener("mousedown", (e) => {
+    app.addEventListener('mousedown', (e) => {
       e.preventDefault();
 
       const rect = app.getBoundingClientRect();
@@ -56,11 +60,11 @@ document.addEventListener("DOMContentLoaded", (e) => {
       startY = e.clientY;
       hasMoved = false;
 
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     });
 
-    app.parentElement.addEventListener("click", (e) => {
+    app.parentElement.addEventListener('click', (e) => {
       if (isDragging) {
         e.preventDefault();
         e.stopPropagation();
@@ -68,7 +72,7 @@ document.addEventListener("DOMContentLoaded", (e) => {
       }
     });
 
-    app.addEventListener("click", (e) => {
+    app.addEventListener('click', (e) => {
       if (isDragging) {
         e.preventDefault();
         e.stopPropagation();
