@@ -94,6 +94,8 @@ const loginUser = async (credentials) => {
       userId: idClaim,
       username: user.username,
       email: user.email,
+      level: user.level || 1,
+      role: user.role || 'user',
     };
 
     const token = jwt.sign(tokenPayload, JWT_SECRET, {
