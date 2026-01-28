@@ -4,7 +4,7 @@
     const avatar = document.getElementById('userAvatar');
     const pseudo = document.getElementById('userPseudo');
     if (avatar) avatar.src = '/public/assets/game_px.png';
-    if (pseudo) pseudo.textContent = 'Utilisateur';
+    if (pseudo) pseudo.textContent = 'Visiteur';
   }
 
   async function fetchProfile() {
@@ -33,7 +33,7 @@
     set(user) {
       const avatar = document.getElementById('userAvatar');
       const pseudo = document.getElementById('userPseudo');
-      if (pseudo) pseudo.textContent = user.username || 'Utilisateur';
+      if (pseudo) pseudo.textContent = user.username || 'Visiteur';
       if (avatar) {
         // Si user.avatar existe, on l'utilise, sinon image par défaut
         avatar.src = user.avatar || '/public/assets/game_px.png';

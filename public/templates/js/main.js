@@ -64,16 +64,16 @@ class Window {
 
     const nTopBar = HTMLbuilder.build('div', { className: 'topbar' });
     nTopBar.appendChild(
-      HTMLbuilder.build('img', { src: '/public/assets/left_bar_px.png' })
+      HTMLbuilder.build('img', { src: '/public/assets/left_bar_px.png' }),
     );
     nTopBar.appendChild(
       HTMLbuilder.build('img', {
         className: 'mid',
         src: '/public/assets/mid_bar_px.png',
-      })
+      }),
     );
     nTopBar.appendChild(
-      HTMLbuilder.build('img', { src: '/public/assets/right_bar_px.png' })
+      HTMLbuilder.build('img', { src: '/public/assets/right_bar_px.png' }),
     );
 
     const label = HTMLbuilder.build('label', {
@@ -96,12 +96,12 @@ class Window {
 
     const leftSection = HTMLbuilder.build('div', {});
     leftSection.appendChild(
-      HTMLbuilder.build('img', { src: '/public/assets/left_content_px.png' })
+      HTMLbuilder.build('img', { src: '/public/assets/left_content_px.png' }),
     );
     leftSection.appendChild(
       HTMLbuilder.build('img', {
         src: '/public/assets/left_content_bottom_px.png',
-      })
+      }),
     );
 
     const holder = HTMLbuilder.build('div', { className: 'holder' });
@@ -109,17 +109,17 @@ class Window {
     holder.appendChild(
       HTMLbuilder.build('img', {
         src: '/public/assets/mid_content_bottom_px.png',
-      })
+      }),
     );
 
     const rightSection = HTMLbuilder.build('div', {});
     rightSection.appendChild(
-      HTMLbuilder.build('img', { src: '/public/assets/right_content_px.png' })
+      HTMLbuilder.build('img', { src: '/public/assets/right_content_px.png' }),
     );
     rightSection.appendChild(
       HTMLbuilder.build('img', {
         src: '/public/assets/right_content_bottom_px.png',
-      })
+      }),
     );
 
     nContent.appendChild(leftSection);
@@ -195,7 +195,7 @@ class Menu extends Window {
           await window.ApiService.logout();
           // Reset user pseudo in nav
           const userPseudo = document.querySelector('#userPseudo');
-          if (userPseudo) userPseudo.innerText = 'Utilisateur';
+          if (userPseudo) userPseudo.innerText = 'Visiteur';
           // Refresh menu to show login button again
           if (window.globalMenuInstance && window.globalMenuInstance.render) {
             window.globalMenuInstance.render();
@@ -244,7 +244,7 @@ class Menu extends Window {
   _isUserLoggedIn() {
     // Check if user pseudo is displayed in nav (user is logged in)
     const userPseudo = document.querySelector('#userPseudo');
-    return userPseudo && userPseudo.innerText !== 'Utilisateur';
+    return userPseudo && userPseudo.innerText !== 'Visiteur';
   }
 }
 
@@ -302,7 +302,7 @@ class Login extends Window {
         // Use centralized ApiService so tokens are stored correctly
         const data = await window.ApiService.login(
           username.value,
-          password.value
+          password.value,
         );
 
         if (data && data.success) {
@@ -555,7 +555,7 @@ class Register extends Window {
       passwordContainer,
       submit,
       errorMsg,
-      loginButton
+      loginButton,
     );
     super.append(form);
   }
@@ -644,7 +644,7 @@ function getDragAfterElement(container, x) {
         return closest;
       }
     },
-    { offset: Number.NEGATIVE_INFINITY }
+    { offset: Number.NEGATIVE_INFINITY },
   ).element;
 }
 
