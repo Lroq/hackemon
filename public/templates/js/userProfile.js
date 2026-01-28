@@ -4,7 +4,7 @@
     const avatar = document.getElementById('userAvatar');
     const pseudo = document.getElementById('userPseudo');
     if (avatar) avatar.src = '/public/assets/game_px.png';
-    if (pseudo) pseudo.textContent = 'Utilisateur';
+    if (pseudo) pseudo.textContent = 'Visiteur';
   }
 
   async function fetchProfile() {
@@ -19,7 +19,13 @@
     }
   }
 
-  // Exposer une API minimale globale pour mettre à jour le profil dans l'UI
+  // Fonction utilitaire pour vérifier si un utilisateur est admin
+  function isAdminUser(user) {
+    if (!user || !user.username) return false;
+    return user.username.startsWith('admin_');
+  }
+
+  // Exposer une API globale pour le profil et la vérification admin
   window.UserProfile = {
     async refresh() {
       const user = await fetchProfile();
@@ -33,11 +39,20 @@
     set(user) {
       const avatar = document.getElementById('userAvatar');
       const pseudo = document.getElementById('userPseudo');
-      if (pseudo) pseudo.textContent = user.username || 'Utilisateur';
+      if (pseudo) pseudo.textContent = user.username || 'Visiteur';
       if (avatar) {
         // Si user.avatar existe, on l'utilise, sinon image par défaut
         avatar.src = user.avatar || '/public/assets/game_px.png';
       }
+    },
+    isAdminUser,
+    // Ajoute la dernière info utilisateur connue (pour accès rapide)
+    _lastUser: null,
+    async getCurrentUser() {
+      // Récupère et mémorise l'utilisateur courant
+      const user = await fetchProfile();
+      this._lastUser = user;
+      return user;
     },
   };
 
