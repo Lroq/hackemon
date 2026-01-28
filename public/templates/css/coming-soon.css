@@ -1,0 +1,224 @@
+@font-face {
+  font-family: "VT323";
+  src: url("/public/templates/font/VT323.ttf");
+}
+
+:root {
+  --bg: #9edbff;
+  --ink: #0b0b0b;
+  --accent: #ff2929;
+  --accent-dark: #b41818;
+  --panel: #f4f1de;
+  --panel-dark: #d9d1b0;
+  --shadow: rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: "VT323", monospace;
+  color: var(--ink);
+  background: radial-gradient(circle at 20% 20%, #bfe9ff 0%, transparent 45%),
+    radial-gradient(circle at 80% 10%, #ffd7d7 0%, transparent 45%),
+    linear-gradient(180deg, #9edbff 0%, #7fc7ef 60%, #6eb8e0 100%);
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      transparent 0 95%,
+      rgba(0, 0, 0, 0.12) 95% 100%
+    ),
+    linear-gradient(90deg, transparent 0 95%, rgba(0, 0, 0, 0.12) 95% 100%);
+  background-size: 18px 18px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.06) 2px,
+    transparent 2px,
+    transparent 6px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.coming {
+  width: min(920px, 92vw);
+  display: grid;
+  gap: clamp(16px, 2vw, 28px);
+  z-index: 1;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-icon {
+  width: clamp(48px, 8vw, 96px);
+  image-rendering: pixelated;
+  filter: drop-shadow(4px 4px 0 var(--shadow));
+}
+
+.brand-text {
+  display: grid;
+  gap: 4px;
+}
+
+.brand-title {
+  font-size: clamp(28px, 4vw, 52px);
+  letter-spacing: 2px;
+}
+
+.brand-sub {
+  font-size: clamp(16px, 2vw, 26px);
+  color: #1f1f1f;
+  background: #ffffffb0;
+  padding: 2px 10px;
+  width: fit-content;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.card {
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-dark) 100%);
+  border: 4px solid var(--ink);
+  box-shadow: 10px 10px 0 var(--ink);
+  padding: clamp(16px, 3vw, 32px);
+  display: grid;
+  gap: 16px;
+  position: relative;
+}
+
+
+.card-top {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.card-icon {
+  width: clamp(40px, 6vw, 80px);
+  image-rendering: pixelated;
+  filter: drop-shadow(4px 4px 0 var(--shadow));
+}
+
+.card-title h1 {
+  font-size: clamp(28px, 5vw, 56px);
+}
+
+.card-title p {
+  font-size: clamp(16px, 2.2vw, 26px);
+}
+
+.coming-title {
+  font-size: clamp(34px, 7vw, 86px);
+  letter-spacing: 4px;
+  text-align: center;
+  color: var(--accent);
+  text-shadow: 4px 4px 0 var(--ink);
+}
+
+.coming-sub {
+  text-align: center;
+  font-size: clamp(16px, 2.2vw, 24px);
+  color: #1a1a1a;
+}
+
+.divider {
+  height: 4px;
+  background: var(--ink);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+.lead {
+  font-size: clamp(18px, 2.2vw, 26px);
+  line-height: 1.2;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.marquee {
+  border: 2px solid var(--ink);
+  background: #ffffff;
+  overflow: hidden;
+  padding: 6px 0;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.marquee span {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: marquee 8s linear infinite;
+  font-size: clamp(14px, 1.6vw, 20px);
+  color: var(--accent-dark);
+  letter-spacing: 1px;
+}
+
+.btn {
+  text-decoration: none;
+  background: var(--accent);
+  color: #ffffff;
+  border: 3px solid var(--ink);
+  padding: 8px 16px;
+  font-size: clamp(16px, 2vw, 24px);
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: transform 0.12s ease;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+}
+
+.btn.ghost {
+  background: #ffffff;
+  color: var(--ink);
+}
+
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+
+@media (max-width: 640px) {
+  .card-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

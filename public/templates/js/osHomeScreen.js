@@ -1,9 +1,25 @@
+const { getUserInfo } = require("../../../server/utils/userTokenManager");
+
 document.addEventListener("DOMContentLoaded", (e) => {
   const apps = document.querySelectorAll(".app");
 
-  if (apps[1].id === "gamehkenginebtn") {
+  if (apps[1] && apps[1].id === "gamehkenginebtn") {
     apps[1].addEventListener("dblclick", () => {
-      window.location.href = "http://localhost:3001";
+      const user =
+        window.currentUser ||
+        window.user ||
+        (window.AppManager &&
+          typeof window.AppManager.getCurrentUser === "function" &&
+          window.AppManager.getCurrentUser()) ||
+        null;
+
+      console.log(user);
+
+      if (user && user.role === "admin") {
+        window.location.href = "http://localhost:3001";
+      } else {
+        window.location.href = "/public/templates/coming-soon.html";
+      }
     });
   }
 
