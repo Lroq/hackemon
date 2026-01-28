@@ -21,6 +21,9 @@ class AppManager {
         this.setupEventListeners();
         this.setupDragAndDrop();
         this.checkUserSession();
+
+        // Ouvre le menu au chargement (comportement historique de main.js)
+        this.openMenu();
         
         this.isInitialized = true;
         console.log("HackOS initialized successfully");
