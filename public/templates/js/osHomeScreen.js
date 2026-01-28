@@ -2,8 +2,39 @@ document.addEventListener("DOMContentLoaded", (e) => {
   const apps = document.querySelectorAll(".app");
 
   if (apps[1].id === "gamehkenginebtn") {
-    apps[1].addEventListener("dblclick", () => {
-      window.location.href = "http://localhost:3001";
+    apps[1].addEventListener("dblclick", async () => {
+      // Vérifier le rôle de l'utilisateur
+      const accessToken = localStorage.getItem('accessToken');
+      
+      console.log('Token récupéré:', accessToken ? 'OUI' : 'NON');
+      
+      if (!accessToken) {
+        // Si non connecté, redirection vers coming soon
+        console.log('Pas de token trouvé');
+        window.location.href = "/coming-soon";
+        return;
+      }
+
+      try {
+        // Décoder le token pour récupérer le rôle
+        const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));
+        console.log('Token décodé:', tokenPayload);
+        console.log('Rôle détecté:', tokenPayload.role);
+        
+        if (tokenPayload.role === 'admin') {
+          // Admin : redirection vers 3001
+          console.log('Admin détecté - Redirection vers 3001');
+          window.location.href = "http://localhost:3001";
+        } else {
+          // User : Coming soon
+          console.log('User détecté - Redirection vers coming-soon');
+          window.location.href = "/coming-soon";
+        }
+      } catch (error) {
+        console.error(' Erreur lors de la vérification du rôle:', error);
+        console.error('Token problématique:', accessToken);
+        window.location.href = "/coming-soon";
+      }
     });
   }
 

@@ -221,6 +221,7 @@ class AuthController {
             username: req.user.username || null,
             email: req.user.email || null,
             level: req.user.level || null,
+            role: req.user.role || 'user',
           }
         : null;
 
@@ -242,6 +243,7 @@ class AuthController {
             username: userDoc.username,
             email: userDoc.email,
             level: userDoc.level,
+            role: userDoc.role || 'user',
             createdAt: userDoc.createdAt,
             updatedAt: userDoc.updatedAt,
           };
@@ -271,6 +273,7 @@ class AuthController {
           username: userData.username,
           email: userData.email,
           level: userData.level,
+          role: userData.role || 'user',
           createdAt: userData.createdAt,
           updatedAt: userData.updatedAt,
         },
