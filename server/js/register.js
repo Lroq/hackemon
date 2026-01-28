@@ -69,6 +69,7 @@ async function registerUser(userData) {
       email,
       hashpassword: hashedPassword,
       level: 1,
+      role: 'user',
     });
     let savedUser;
     try {
@@ -95,6 +96,7 @@ async function registerUser(userData) {
       username: savedUser.username,
       email: savedUser.email,
       level: savedUser.level,
+      role: savedUser.role,
     });
     const refreshToken = generateRefreshToken({
       UUID: savedUser.UUID,
@@ -122,6 +124,7 @@ async function registerUser(userData) {
         createdAt: savedUser.createdAt,
         updatedAt: savedUser.updatedAt,
         level: savedUser.level,
+        role: savedUser.role,
       });
     } catch (e) {}
 
@@ -133,6 +136,7 @@ async function registerUser(userData) {
         username: savedUser.username,
         email: savedUser.email,
         level: savedUser.level,
+        role: savedUser.role,
       },
       tokens: { accessToken, refreshToken },
       token: accessToken,
